@@ -1,102 +1,110 @@
-# Aura-productive
-To-Do &amp; Pomodoro Focus App TaskFlow is a simple and productivity-focused web application that combines a To-Do Task Manager with a Pomodoro Focus Timer to help users plan tasks and stay focused while working. The app links tasks directly with focus sessions, encouraging better time management and deep work.
+# Aura Tasks & Focus ✨
 
-🌟 Aura Tasks & Focus
-Aura Tasks & Focus is a modern productivity web app that combines a smart to-do list with a Pomodoro focus timer. It helps users organize tasks, stay focused, build daily streaks, and track productivity — all with a clean, minimal UI.
-Built using HTML, Tailwind CSS, and Vanilla JavaScript, Aura also works as a Progressive Web App (PWA) and supports offline usage.
+Aura Tasks & Focus is a modern productivity web application that combines task management and a Pomodoro focus timer to help users work with clarity, consistency, and focus. Designed with a clean interface, smooth interactions, and offline support.
 
-🚀 Features
-✅ Task Management
-Add, edit, and delete tasks
-Mark tasks as completed
-Attach date & time reminders
-Filter tasks:
-All
-Active
-Completed
-Persistent storage using localStorage
+---
 
-⏰ Pomodoro Focus Timer
-Focus, Short Break, and Long Break modes
-Circular animated progress ring
-Start, pause, and reset timer
-Customizable timer durations
-Session completion celebration 🎉
+## Overview 📌
 
-🎯 Task-Focused Sessions
-Start a focus session directly from a task
-See the active task while focusing
-Automatically log completed focus sessions
+Aura is built for individuals who want a simple yet powerful way to manage daily tasks and maintain deep focus sessions. The application works seamlessly across devices and can be installed as a Progressive Web App (PWA).
 
-🔥 Productivity Tracking
-Daily streak system
-Session count & total focused minutes
-Focus history log
-Confetti rewards for task completion & sessions
+---
 
-🌙 UI & Experience
-Light & Dark mode (system-aware + manual toggle)
-Smooth animations & transitions
-Responsive mobile-first design
-Glassmorphism & modern UI elements
-📱 Progressive Web App (PWA)
-Installable on mobile & desktop
-Offline support via Service Worker
-App manifest included
+## Key Features 🚀
 
-🛠️ Tech Stack
-HTML5
-Tailwind CSS
-Vanilla JavaScript
-Lucide Icons
-Canvas Confetti
-LocalStorage API
-Service Workers (PWA)
+### Task Management
+- Create, complete, and delete tasks
+- Optional date and time reminders
+- Filter tasks by status (All / Active / Completed)
+- LocalStorage-based data persistence
 
-📂 Project Structure
+### Focus Timer
+- Pomodoro-based focus workflow
+- Focus, Short Break, and Long Break modes
+- Animated circular progress indicator
+- Customizable timer durations
 
-aura-tasks-focus/
+### Productivity Tracking
+- Daily focus streak system
+- Focus session and total minutes tracking
+- Session history log
+
+### User Experience
+- Light and Dark mode support
+- Smooth animations and transitions
+- Responsive, mobile-first layout
+- Minimal and distraction-free UI
+
+### Progressive Web App
+- Installable on mobile and desktop
+- Offline access using Service Worker
+- App manifest configuration included
+
+---
+
+## Technology Stack 🛠️
+
+- HTML5
+- Tailwind CSS
+- JavaScript (Vanilla)
+- Lucide Icons
+- Canvas Confetti
+- LocalStorage API
+- Service Workers (PWA)
+
+---
+
+## Project Structure 📂
+
+Aura-Tasks-Focus/
 │
-├── index.html          # Main HTML file
-├── styles.css          # Custom styles & animations
-├── app.js              # Task & reminder logic
-├── pomodoro.js         # Pomodoro timer logic
-├── manifest.json       # PWA configuration
-├── service-worker.js   # Offline caching
-└── README.md           # Project documentation
+├── index.html
+├── styles.css
+├── app.js
+├── pomodoro.js
+├── manifest.json
+├── service-worker.js
+└── README.md
 
-⚙️ How to Run Locally
-1.Clone the repository:
+---
 
-Bash
-git clone https://github.com/your-username/aura-tasks-focus.git
+## Installation & Usage ⚙️
 
-2.Open the project folder:
-Bash
-cd aura-tasks-focus
+1. Clone the repository:
+   git clone https://github.com/your-username/aura-tasks-focus.git
 
-3.Run using a local server (recommended for PWA):
-Bash
-npx serve
-or use Live Server in VS Code.
+2. Navigate to the project directory:
+   cd aura-tasks-focus
 
-4.Open in browser:
+3. Start a local development server:
+   npx serve
 
-http://localhost:3000
+4. Open in your browser:
+   http://localhost:3000
 
-🔔 Notifications & Reminders
-Uses the Notification API
-Requests permission on first load
-Plays an alarm sound when a task reminder triggers
-⚠️ Notifications may not work on some browsers unless served via HTTPS.
-🧠 Future Enhancements
-Cloud sync / login system
-Task categories & priorities
-Weekly productivity charts
-Sound customization
-Focus statistics export
+> Note: PWA features require running the app on a local or HTTPS server.
 
-👨‍💻 Author
+---
+
+## Notifications 🔔
+
+- Uses the browser Notification API
+- Requests permission on first launch
+- Triggers reminders based on task schedule
+
+---
+
+## Roadmap 🔮
+
+- Cloud synchronization and user accounts
+- Task categories and priority levels
+- Productivity analytics and reports
+- Custom sounds and themes
+
+---
+
+## Author 👨‍💻
+
 Rudra Patel
-Web Developer | Frontend Enthusiast
+Web Developer | Frontend 
 Built with ❤️ and focus
