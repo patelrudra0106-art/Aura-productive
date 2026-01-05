@@ -1,6 +1,6 @@
 {
   "name": "Aura Productivity",
-  "short_name": "Aura",
+  "short_name": "TaskTimer",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0F172A",
