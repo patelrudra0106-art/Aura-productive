@@ -1,6 +1,6 @@
 // --- STATE ---
 let tasks = JSON.parse(localStorage.getItem('auraTasks')) || [
-    { id: 1, text: 'Welcome to Aura! 👋', date: '', time: '', completed: false }
+    { id: 1, text: 'Welcome to Aura! 👋', date: '', time: '', completed: false, notified: false }
 ];
 let streak = JSON.parse(localStorage.getItem('auraStreak')) || { count: 0, lastLogin: '' };
 let currentFilter = 'all';
@@ -32,51 +32,67 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 2. Notification Permissions
-    if ("Notification" in window && Notification.permission !== "granted") {
-        Notification.requestPermission();
+    // 2. Notification Button Listener
+    const notifBtn = document.getElementById('enable-notifs-btn');
+    if (notifBtn) {
+        notifBtn.addEventListener('click', requestNotificationPermission);
     }
+    
+    // 3. Check Status on Load
+    checkPermissionStatus();
 
-    // 3. Start App Logic
-    checkStreak(); // Now runs safely
+    // 4. Start App Logic
+    checkStreak(); 
     renderTasks();
-    setInterval(checkReminders, 5000); 
+    setInterval(checkReminders, 2000); // Check every 2 seconds
 });
 
-// --- STREAK SYSTEM (Fixed) ---
-function checkStreak() {
-    const today = new Date().toISOString().split('T')[0];
-    if (streak.lastLogin !== today) {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().split('T')[0];
-        // If last login wasn't yesterday AND wasn't empty, reset.
-        if (streak.lastLogin !== yesterdayStr && streak.lastLogin) streak.count = 0;
+// --- NOTIFICATION SYSTEM (Status Bar) ---
+
+function requestNotificationPermission() {
+    if (!("Notification" in window)) {
+        alert("Notifications are not supported on this specific browser/mode.");
+        return;
     }
-    updateStreakUI();
+
+    Notification.requestPermission().then((permission) => {
+        checkPermissionStatus();
+        if (permission === "granted") {
+            // Send a test notification to prove it works
+            new Notification("Aura Connected", { 
+                body: "Notifications are set up correctly!", 
+                icon: 'https://cdn-icons-png.flaticon.com/512/3239/3239952.png'
+            });
+        } else {
+            alert("Permission denied. You may need to reset site settings.");
+        }
+    });
 }
 
-window.incrementStreak = function() {
-    const today = new Date().toISOString().split('T')[0];
-    if (streak.lastLogin !== today) {
-        streak.count++;
-        streak.lastLogin = today;
-        localStorage.setItem('auraStreak', JSON.stringify(streak));
-        updateStreakUI();
-        confetti({ particleCount: 30, spread: 50, origin: { y: 0.1 }, colors: ['#f97316'] });
+function checkPermissionStatus() {
+    const btn = document.getElementById('enable-notifs-btn');
+    if(!btn) return;
+
+    if (Notification.permission === "granted") {
+        btn.textContent = "Active ✅";
+        btn.classList.remove('bg-slate-200', 'dark:bg-slate-600', 'text-slate-600');
+        btn.classList.add('bg-emerald-100', 'text-emerald-700', 'dark:bg-emerald-900/30', 'dark:text-emerald-400');
+    } else if (Notification.permission === "denied") {
+        btn.textContent = "Blocked ❌";
+        btn.classList.add('bg-rose-100', 'text-rose-700');
+    } else {
+        btn.textContent = "Enable";
     }
 }
 
-function updateStreakUI() {
-    // Re-select element to be safe
-    const el = document.getElementById('streak-count');
-    if(el) el.textContent = streak.count;
-}
-
-// --- ALARM LOGIC ---
 function checkReminders() {
     const now = new Date();
-    const localDate = now.toLocaleDateString('en-CA'); 
+    // Use manual date formatting for consistency (YYYY-MM-DD)
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const localDate = `${year}-${month}-${day}`;
+    
     const hours = now.getHours().toString().padStart(2, '0');
     const minutes = now.getMinutes().toString().padStart(2, '0');
     const localTime = `${hours}:${minutes}`;
@@ -92,19 +108,63 @@ function triggerAlarm(task) {
     task.notified = true;
     saveTasks();
     
+    // 1. Play Sound
     const audio = document.getElementById('alarm-sound');
-    // Use online sound
     if(!audio.src || audio.src === window.location.href) {
         audio.src = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3";
     }
-    
     audio.currentTime = 0;
-    audio.play().catch(e => console.log("Audio blocked", e));
+    audio.play().catch(e => console.log("Audio waiting for interaction"));
 
+    // 2. TRIGGER SYSTEM NOTIFICATION (Status Bar)
     if (Notification.permission === "granted") {
-        new Notification("Aura Reminder 🔔", { body: `It's time for: ${task.text}`, icon: './icon.png' });
+        try {
+            const notif = new Notification("Aura Task 🔔", { 
+                body: task.text, 
+                icon: 'https://cdn-icons-png.flaticon.com/512/3239/3239952.png',
+                vibrate: [200, 100, 200], // Buzz the phone
+                tag: 'aura-' + task.id   // Unique tag
+            });
+            
+            notif.onclick = function() {
+                window.focus();
+                this.close();
+            };
+        } catch (e) {
+            console.error("System notification failed:", e);
+        }
     }
+    
     renderTasks();
+}
+
+// --- STREAK SYSTEM ---
+function checkStreak() {
+    const today = new Date().toISOString().split('T')[0];
+    if (streak.lastLogin !== today) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+        
+        if (streak.lastLogin !== yesterdayStr && streak.lastLogin) streak.count = 0;
+    }
+    updateStreakUI();
+}
+
+window.incrementStreak = function() {
+    const today = new Date().toISOString().split('T')[0];
+    if (streak.lastLogin !== today) {
+        streak.count++;
+        streak.lastLogin = today;
+        localStorage.setItem('auraStreak', JSON.stringify(streak));
+        updateStreakUI();
+        if(window.confetti) confetti({ particleCount: 30, spread: 50, origin: { y: 0.1 }, colors: ['#f97316'] });
+    }
+}
+
+function updateStreakUI() {
+    const el = document.getElementById('streak-count');
+    if(el) el.textContent = streak.count;
 }
 
 // --- CORE FUNCTIONS ---
@@ -123,14 +183,18 @@ function renderTasks() {
         emptyState.classList.add('hidden');
     }
 
+    filtered.sort((a, b) => (a.completed === b.completed) ? 0 : a.completed ? 1 : -1);
+
     filtered.forEach(task => {
         const li = document.createElement('li');
-        const now = new Date();
-        const localDate = now.toLocaleDateString('en-CA');
-        const isRinging = task.notified && !task.completed && (task.date === localDate);
-        const ringClass = isRinging ? 'ring-2 ring-indigo-500 shadow-lg shadow-indigo-500/40 animate-pulse-fast' : 'border border-slate-100 dark:border-slate-700 shadow-sm';
+        
+        // Highlight logic for recently notified tasks
+        const isRinging = task.notified && !task.completed && (task.date === new Date().toISOString().split('T')[0]);
+        const ringClass = isRinging 
+            ? 'ring-2 ring-indigo-500 shadow-lg shadow-indigo-500/40 animate-pulse-fast bg-indigo-50 dark:bg-slate-800' 
+            : 'border border-slate-100 dark:border-slate-700 shadow-sm bg-white dark:bg-slate-800';
 
-        li.className = `group flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-slate-800 transition-all ${ringClass} animate-fade-in ${task.completed ? 'opacity-75' : ''}`;
+        li.className = `group flex items-center justify-between p-4 rounded-2xl transition-all ${ringClass} animate-fade-in ${task.completed ? 'opacity-60' : ''}`;
         
         let metaHtml = '';
         if (task.date || task.time) {
@@ -194,7 +258,7 @@ function toggleTask(id) {
         if(t.id === id) {
             const isCompleted = !t.completed;
             if(isCompleted) {
-                confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 }, colors: ['#6366f1'] });
+                if(window.confetti) confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 }, colors: ['#6366f1'] });
                 window.incrementStreak(); 
             }
             return {...t, completed: isCompleted};
