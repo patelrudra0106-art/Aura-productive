@@ -6,7 +6,7 @@ let tasks = JSON.parse(localStorage.getItem('auraTasks')) || [
 ];
 let streak = JSON.parse(localStorage.getItem('auraStreak')) || { count: 0, lastLogin: '' };
 let currentFilter = 'all';
-let wakeLock = null; // Keeps screen from sleeping fully if supported
+let wakeLock = null; 
 
 // --- ELEMENTS ---
 const taskListEl = document.getElementById('task-list');
@@ -39,56 +39,51 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check every 1 second
     setInterval(checkReminders, 1000);
 
-    // CRITICAL: Start "Keep Alive" mode on user interaction
-    // This allows the app to run in the background by playing silent audio
-    const startKeepAlive = () => {
+    // BACKGROUND KEEP-ALIVE (Essential for timer sound)
+    const activateApp = () => {
         enableBackgroundMode();
-        // Remove listeners after first successful activation
-        document.removeEventListener('click', startKeepAlive);
-        document.removeEventListener('touchstart', startKeepAlive);
+        // Unlock main audio too
+        const alarm = document.getElementById('alarm-sound');
+        if(alarm) { 
+            alarm.volume = 0.1; 
+            alarm.play().then(() => { 
+                alarm.pause(); 
+                alarm.currentTime=0; 
+            }).catch(()=>{}); 
+        }
+        
+        document.removeEventListener('click', activateApp);
+        document.removeEventListener('touchstart', activateApp);
     };
     
-    document.addEventListener('click', startKeepAlive);
-    document.addEventListener('touchstart', startKeepAlive);
+    document.addEventListener('click', activateApp);
+    document.addEventListener('touchstart', activateApp);
     
-    // Also re-trigger on wake
     document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "visible") {
-            checkReminders();
-            enableBackgroundMode();
-        }
+        if (document.visibilityState === "visible") checkReminders();
     });
 });
 
-// --- THE MAGIC FIX: KEEP APP ALIVE ---
+// --- BACKGROUND KEEP-ALIVE ---
 async function enableBackgroundMode() {
-    // 1. Try to keep screen awake (Works when app is visible)
+    // 1. Wake Lock (Keeps screen from sleeping if possible)
     try {
         if ('wakeLock' in navigator && !wakeLock) {
             wakeLock = await navigator.wakeLock.request('screen');
-            console.log("💡 Screen Wake Lock Active");
         }
-    } catch (err) {
-        console.log("Wake Lock not supported/allowed", err);
-    }
+    } catch (err) {}
 
-    // 2. Play Silent Audio (Tricks Android to keep app running in background)
+    // 2. Play SILENT Loop (Tricks phone into thinking music is playing)
     const silence = document.getElementById('silence');
-    if(silence && silence.paused) {
-        silence.volume = 0.01; // Almost silent, but "playing"
-        // We use a promise to catch autoplay errors
-        silence.play().then(() => {
-            console.log("🔊 Background Audio Active");
-        }).catch(e => {
-            console.log("Background Audio Autoplay Blocked - waiting for click");
-        }); 
+    if(silence) {
+        silence.volume = 1; // It's a silent file, volume doesn't matter
+        silence.play().catch(e => console.log("Bg Audio waiting")); 
     }
 }
 
 // --- REMINDER LOGIC ---
 function checkReminders() {
     const now = new Date();
-    // Format: YYYY-MM-DD
     const currentDate = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
     const currentTotalMinutes = (now.getHours() * 60) + now.getMinutes();
 
@@ -97,10 +92,9 @@ function checkReminders() {
             const [taskH, taskM] = task.time.split(':').map(Number);
             const taskTotalMinutes = (taskH * 60) + taskM;
             
-            // Check Date
             if (task.date === currentDate) {
-                // Check Time: Trigger if matches OR is within last 2 minutes (catch-up if phone lagged)
-                if (currentTotalMinutes >= taskTotalMinutes && currentTotalMinutes <= taskTotalMinutes + 2) {
+                // Trigger if time matches OR is within last 15 mins (catch-up)
+                if (currentTotalMinutes >= taskTotalMinutes && currentTotalMinutes <= taskTotalMinutes + 15) {
                     triggerAlarm(task);
                 }
             }
@@ -112,32 +106,24 @@ function triggerAlarm(task) {
     task.notified = true;
     saveTasks();
 
-    // 1. Play Real Alarm Sound
+    // 1. Play Alarm (LOUD)
     const audio = document.getElementById('alarm-sound');
-    if(!audio.src || audio.src === window.location.href) {
-        audio.src = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3";
-    }
-    audio.volume = 1.0;
-    audio.play().catch(e => console.log("Audio blocked", e));
-
-    // 2. Send Notification
-    if(window.NotificationSystem) {
-        NotificationSystem.send("Reminder 🔔", task.text);
+    if(audio) {
+        audio.volume = 1.0; 
+        audio.currentTime = 0;
+        audio.play().catch(e => console.log("Audio blocked"));
     }
     
     renderTasks();
 }
 
-// --- STANDARD FUNCTIONS (Unchanged) ---
+// --- STANDARD FUNCTIONS ---
 function saveTasks() { localStorage.setItem('auraTasks', JSON.stringify(tasks)); renderTasks(); }
-
 function addTask(text, date, time) { 
     tasks.unshift({ id: Date.now(), text, date, time, completed: false, notified: false }); 
     saveTasks(); 
-    // Re-ensure background mode is active when user is interacting
-    enableBackgroundMode();
+    enableBackgroundMode(); // Re-trigger on add
 }
-
 function toggleTask(id) {
     tasks = tasks.map(t => {
         if(t.id === id) {
@@ -152,23 +138,11 @@ function toggleTask(id) {
     });
     saveTasks();
 }
-
 function deleteTask(id) { tasks = tasks.filter(t => t.id !== id); saveTasks(); }
-
-window.startFocusOnTask = function(id, text) { 
-    if(window.switchView) window.switchView('focus'); 
-    if(window.setFocusTask) window.setFocusTask(text); 
-}
+window.startFocusOnTask = function(id, text) { if(window.switchView) window.switchView('focus'); if(window.setFocusTask) window.setFocusTask(text); }
 
 // --- LISTENERS ---
-taskForm.addEventListener('submit', (e) => { 
-    e.preventDefault(); 
-    if(taskInput.value.trim()) { 
-        addTask(taskInput.value.trim(), dateInput.value, timeInput.value); 
-        taskInput.value = ''; 
-        addBtn.disabled = true; 
-    }
-});
+taskForm.addEventListener('submit', (e) => { e.preventDefault(); if(taskInput.value.trim()) { addTask(taskInput.value.trim(), dateInput.value, timeInput.value); taskInput.value = ''; addBtn.disabled = true; }});
 taskInput.addEventListener('input', (e) => addBtn.disabled = !e.target.value.trim());
 
 filterBtns.forEach(btn => {
