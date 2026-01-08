@@ -16,7 +16,11 @@
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
                     animation: { 
                         'spin-slow': 'spin 3s linear infinite',
-                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'fade-in': 'fadeIn 0.3s ease-out forwards'
+                    },
+                    keyframes: {
+                        fadeIn: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } }
                     }
                 }
             }
@@ -26,8 +30,6 @@
         if (localStorage.getItem('auraTheme') === 'dark' || 
            (!('auraTheme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
         }
     </script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -79,11 +81,13 @@
         <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl relative animate-fade-in border border-slate-100 dark:border-slate-700">
             <h3 class="text-lg font-bold mb-4">Settings</h3>
             <div class="space-y-4">
+                
                 <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-700/50 p-3 rounded-xl">
                     <label class="text-sm font-medium text-slate-500 dark:text-slate-300">Notifications</label>
-                    <button id="enable-notifs-btn" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-600 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 transition-colors">
-                        Enable
-                    </button>
+                    <div class="flex gap-2">
+                        <button onclick="NotificationSystem.test()" class="px-3 py-1.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg text-xs font-bold hover:bg-indigo-200 transition-colors">Test 🔔</button>
+                        <button id="enable-notifs-btn" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-600 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 transition-colors">Enable</button>
+                    </div>
                 </div>
 
                 <div class="flex justify-between items-center">
@@ -107,8 +111,7 @@
         <section id="view-tasks" class="view-section transition-all duration-300">
             <form id="task-form" class="mb-6">
                 <div class="relative group mb-3">
-                    <input type="text" id="task-input" placeholder="What needs doing?" autocomplete="off"
-                        class="w-full pl-4 pr-4 py-4 rounded-2xl bg-white dark:bg-slate-800 border-2 border-transparent focus:border-indigo-500/30 outline-none shadow-sm transition-all">
+                    <input type="text" id="task-input" placeholder="What needs doing?" autocomplete="off" class="w-full pl-4 pr-4 py-4 rounded-2xl bg-white dark:bg-slate-800 border-2 border-transparent focus:border-indigo-500/30 outline-none shadow-sm transition-all">
                 </div>
                 <div class="flex flex-wrap gap-2 items-center justify-between">
                     <div class="flex gap-2">
@@ -118,15 +121,12 @@
                     <button type="submit" id="add-btn" disabled class="ml-auto px-6 py-2.5 bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-indigo-700 text-white rounded-xl transition-all shadow-md shadow-indigo-500/20">Add</button>
                 </div>
             </form>
-
             <div class="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
                 <button data-filter="all" class="filter-btn active px-4 py-2 rounded-xl text-sm font-medium bg-white dark:bg-slate-800 shadow-sm text-indigo-600">All</button>
                 <button data-filter="active" class="filter-btn px-4 py-2 rounded-xl text-sm font-medium text-slate-500 hover:bg-white dark:hover:bg-slate-800">Active</button>
                 <button data-filter="completed" class="filter-btn px-4 py-2 rounded-xl text-sm font-medium text-slate-500 hover:bg-white dark:hover:bg-slate-800">Done</button>
             </div>
-            
             <ul id="task-list" class="space-y-3 pb-8"></ul>
-            
             <div id="empty-state" class="hidden text-center py-12">
                 <div class="w-20 h-20 bg-indigo-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4"><i data-lucide="coffee" class="w-8 h-8 text-indigo-300"></i></div>
                 <p class="text-slate-400">No tasks here. Relax or add one!</p>
@@ -146,10 +146,7 @@
                     <button onclick="clearFocusTask()" class="p-2 hover:bg-white dark:hover:bg-slate-800 rounded-full text-slate-400 hover:text-rose-500 transition-colors"><i data-lucide="x" class="w-4 h-4"></i></button>
                 </div>
             </div>
-
             <div class="w-full bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-xl shadow-indigo-500/5 dark:shadow-none border border-slate-100 dark:border-slate-700 relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
-                <div class="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -ml-10 -mb-10"></div>
                 <div class="flex justify-center gap-2 mb-8 bg-slate-100 dark:bg-slate-900/50 p-1 rounded-xl w-fit mx-auto relative z-10">
                     <button id="mode-work" class="px-4 py-2 rounded-lg text-sm font-medium transition-all bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-300">Focus</button>
                     <button id="mode-short" class="px-4 py-2 rounded-lg text-sm font-medium transition-all text-slate-500 hover:text-slate-700 dark:text-slate-400">Short Break</button>
@@ -170,12 +167,10 @@
                     <button id="timer-reset" class="w-16 h-16 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all active:scale-95"><i data-lucide="rotate-ccw" class="w-6 h-6"></i></button>
                 </div>
             </div>
-
             <div class="mt-6 flex gap-4 text-center w-full">
                 <div class="flex-1 bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/50"><p class="text-xs text-slate-400 uppercase font-bold tracking-wider">Sessions</p><p id="sessions-count" class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">0</p></div>
                 <div class="flex-1 bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/50"><p class="text-xs text-slate-400 uppercase font-bold tracking-wider">Minutes</p><p id="minutes-count" class="text-2xl font-bold text-purple-600 dark:text-purple-400">0</p></div>
             </div>
-
             <div class="mt-8 w-full">
                 <div class="flex justify-between items-end mb-4 px-2">
                     <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Recent History</h3>
@@ -193,6 +188,7 @@
 
     <audio id="alarm-sound" preload="auto"></audio>
 
+    <script src="notifications.js"></script>
     <script src="app.js"></script>
     <script src="pomodoro.js"></script>
     
