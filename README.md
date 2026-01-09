@@ -80,3 +80,25 @@ aura-productivity/
 ├── profile.js          # Gamification (Points & Streaks)
 ├── social.js           # Leaderboard logic
 └── notifications.js    # In-app toast notification system
+
+
+⚙️ Configuration
+​You can customize the timer settings directly within the app:
+1.​Click the Settings (Gear) icon in the header.
+
+2.​Adjust durations for Focus, Short Break, and Long Break.
+
+3.​Click Save Changes (Settings are saved to localStorage).
+​🤝 Contributing
+​Contributions are welcome! Please follow these steps:
+
+1.​Fork the project.
+
+2.​Create your feature branch (git checkout -b feature/AmazingFeature).
+
+3.​Commit your changes (git commit -m 'Add some AmazingFeature').
+
+4.​Push to the branch (git push origin feature/AmazingFeature).
+
+5.​Open a Pull Request.
+
