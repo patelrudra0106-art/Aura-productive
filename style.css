@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Base Styles & Transitions */
+body, div, input, button, span, svg, circle, section, p, h1, h2, h3, select {
+    transition-property: color, background-color, border-color, fill, stroke, opacity, transform, stroke-dashoffset, box-shadow;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+}
+
+/* Utilities */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+.glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+.dark .glass { background: rgba(15, 23, 42, 0.7); }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+
+/* Browser Fixes */
+.dark ::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.6; cursor: pointer; }
+:focus-visible { outline: none; }
+
+/* --- AUTH & SOCIAL STYLES --- */
+#auth-overlay {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+.auth-card {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+.dark .auth-card {
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.user-row {
+    transition: transform 0.2s, background-color 0.2s;
+}
+.user-row:hover {
+    transform: translateX(4px);
+    background-color: rgba(99, 102, 241, 0.05);
+}
+.dark .user-row:hover {
+    background-color: rgba(99, 102, 241, 0.1);
+}
+
+.rank-badge {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: bold;
+}
+.rank-1 { background: #EAB308; color: white; box-shadow: 0 2px 10px rgba(234, 179, 8, 0.3); }
+.rank-2 { background: #94A3B8; color: white; }
+.rank-3 { background: #B45309; color: white; }

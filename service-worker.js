@@ -1,0 +1,18 @@
+/* service-worker.js */
+const ASSETS_TO_CACHE = [
+  './',
+  './index.html',
+  './style.css',
+  './app.js',
+  './pomodoro.js',
+  './manifest.json',
+  // ADD THESE NEW FILES:
+  './auth.js',
+  './social.js',
+  './notifications.js',
+  './profile.js',
+  // External libraries
+  'https://cdn.tailwindcss.com',
+  'https://unpkg.com/lucide@latest',
+  'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js'
+];
