@@ -1,118 +1,82 @@
-# Aura Tasks & Focus ✨
+# 🌟 Aura Productivity
 
-Aura Tasks & Focus is a modern productivity web application that combines task management and a Pomodoro focus timer to help users work with clarity, consistency, and focus. Designed with a clean interface, smooth interactions, and offline support.
+**Aura** is a comprehensive productivity application that combines a smart task manager with a gamified focus timer. Built to help users build consistent habits, it features a sleek dark/light mode UI, XP rewards system, and a simulated social leaderboard.
 
----
+## ✨ Features
 
-## Overview 📌
+### 📝 Smart Task Management
+* **ToDo List:** Add tasks with optional due dates and specific times.
+* **Intelligent Reminders:** Audio alarms and visual notifications when tasks are due.
+* **Filtering:** View All, Active, or Completed tasks.
+* **Task Linking:** One-click to start a "Focus Session" specifically for a selected task.
 
-Aura is built for individuals who want a simple yet powerful way to manage daily tasks and maintain deep focus sessions. The application works seamlessly across devices and can be installed as a Progressive Web App (PWA).
+### ⏱️ Focus Timer (Pomodoro)
+* **Flexible Modes:** Preset intervals for **Focus Time** (25m), **Short Break** (5m), and **Long Break** (15m).
+* **Visual Timer:** Circular progress ring with smooth animations.
+* **Session History:** Logs duration and task labels for every completed session.
+* **Background Support:** Utilizes the Wake Lock API to keep the screen active during focus sessions.
 
----
+### 🎮 Gamification & Social
+* **XP System:** Earn points for completing tasks (20pts), finishing early (50pts), and completing focus sessions (50pts).
+* **Streaks:** Daily streak counter to encourage consistency.
+* **Global Contest:** A simulated leaderboard to compete with other users.
+* **User Profiles:** Track your total points, current streak, and rank.
 
-## Key Features 🚀
-
-### Task Management
-- Create, complete, and delete tasks
-- Optional date and time reminders
-- Filter tasks by status (All / Active / Completed)
-- LocalStorage-based data persistence
-
-### Focus Timer
-- Pomodoro-based focus workflow
-- Focus, Short Break, and Long Break modes
-- Animated circular progress indicator
-- Customizable timer durations
-
-### Productivity Tracking
-- Daily focus streak system
-- Focus session and total minutes tracking
-- Session history log
-
-### User Experience
-- Light and Dark mode support
-- Smooth animations and transitions
-- Responsive, mobile-first layout
-- Minimal and distraction-free UI
-
-### Progressive Web App
-- Installable on mobile and desktop
-- Offline access using Service Worker
-- App manifest configuration included
+### 🎨 Modern UI/UX
+* **Adaptive Theme:** Toggle between **Light Mode** and **Dark Mode** (persists in LocalStorage).
+* **Glassmorphism:** Modern design with backdrop blur effects and smooth transitions.
+* **PWA Ready:** Includes `manifest.json` and a Service Worker for installability on mobile/desktop.
 
 ---
 
-## Technology Stack 🛠️
+## 🛠️ Tech Stack
 
-- HTML5
-- Tailwind CSS
-- JavaScript (Vanilla)
-- Lucide Icons
-- Canvas Confetti
-- LocalStorage API
-- Service Workers (PWA)
+* **Frontend:** HTML5, CSS3, Vanilla JavaScript
+* **Styling:** [Tailwind CSS](https://tailwindcss.com/) (via CDN)
+* **Icons:** [Lucide Icons](https://lucide.dev/)
+* **Animations:** CSS Transitions & [Canvas Confetti](https://www.kirilv.com/canvas-confetti/)
+* **Data Storage:** Browser `localStorage` (No backend required).
 
 ---
 
-## Project Structure 📂
+## 🚀 Getting Started
 
-Aura-Tasks-Focus/
-│
-├── index.html
-├── styles.css
-├── app.js
-├── pomodoro.js
-├── manifest.json
-├── service-worker.js
-└── README.md
+Since Aura is built with vanilla web technologies, no build process is required.
 
----
+### Prerequisites
+A modern web browser (Chrome, Edge, Firefox, Safari).
 
-## Installation & Usage ⚙️
+### Installation
 
-1. Clone the repository:
-   git clone https://github.com/your-username/aura-tasks-focus.git
+1.  **Clone the repository:**
+    ```bash
+    git clone [https://github.com/yourusername/aura-productivity.git](https://github.com/yourusername/aura-productivity.git)
+    cd aura-productivity
+    ```
 
-2. Navigate to the project directory:
-   cd aura-tasks-focus
-
-3. Start a local development server:
-   npx serve
-
-4. Open in your browser:
-   http://localhost:3000
-
-> Note: PWA features require running the app on a local or HTTPS server.
+2.  **Run the application:**
+    * **Simple Method:** Open `index.html` directly in your browser.
+    * **PWA Method (Recommended):** To ensure the Service Worker functions correctly, use a local server:
+        ```bash
+        # Python 3
+        python -m http.server 8000
+        # Or using VS Code "Live Server" extension
+        ```
+        Then visit `http://localhost:8000`.
 
 ---
 
-## Notifications 🔔
+## 📂 Project Structure
 
-- Uses the browser Notification API
-- Requests permission on first launch
-- Triggers reminders based on task schedule
-
----
-
-## Roadmap 🔮
-
-- Cloud synchronization and user accounts
-- Task categories and priority levels
-- Productivity analytics and reports
-- Custom sounds and themes
-
----
-
-## Author 👨‍💻
-
-Rudra Patel
-Web Developer | Frontend 
-Built with ❤️ and focus
-
-For Download App:-
-
-Click on released
-
-You see Tasktimer.zip
-
-Then download app
+```text
+aura-productivity/
+├── index.html          # Main application layout and PWA entry
+├── style.css           # Global styles and animations
+├── manifest.json       # PWA metadata
+├── service-worker.js   # Offline caching capabilities
+├── auth.js             # User login/signup simulation
+├── app.js              # Task management logic
+├── pomodoro.js         # Timer logic and settings
+├── profile.js          # Gamification (Points & Streaks)
+├── social.js           # Leaderboard logic
+└── notifications.js    # In-app toast notification system
