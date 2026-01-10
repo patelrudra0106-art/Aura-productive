@@ -21,6 +21,8 @@
     <script>
         if (localStorage.getItem('auraTheme') === 'dark' || (!('auraTheme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
         }
     </script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -63,7 +65,12 @@
                 <p id="toggle-auth-mode">New here? <span class="text-indigo-600 font-bold cursor-pointer hover:underline" onclick="toggleAuthMode()">Create Account</span></p>
             </div>
         </div>
-        <div class="absolute bottom-6 text-slate-400 text-xs font-medium">Productivity • Focus • Contest</div>
+
+        <div class="absolute bottom-6 flex flex-col items-center gap-1">
+            <div class="text-slate-400 text-xs font-medium">Productivity • Focus • Contest</div>
+            <div class="text-indigo-500/80 text-[10px] font-bold tracking-wide">Made by Patel Rudra</div>
+        </div>
+
     </div>
 
     <div id="main-app" class="hidden animate-fade-in flex flex-col min-h-screen">
@@ -83,6 +90,12 @@
                     <i data-lucide="flame" class="w-4 h-4 text-orange-500 fill-orange-500"></i>
                     <span id="streak-count" class="text-sm font-bold text-orange-600 dark:text-orange-400">0</span>
                 </div>
+                
+                <button id="theme-toggle" class="p-2.5 rounded-full bg-white dark:bg-slate-800/50 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                    <i data-lucide="moon" class="w-5 h-5 text-slate-500 dark:text-slate-400 dark:hidden"></i>
+                    <i data-lucide="sun" class="w-5 h-5 text-yellow-500 hidden dark:block"></i>
+                </button>
+
                 <button onclick="window.openAccount()" class="p-2.5 rounded-full bg-white dark:bg-slate-800/50 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                     <i data-lucide="user" class="w-5 h-5 text-indigo-500"></i>
                 </button>
@@ -108,7 +121,7 @@
                     </div>
                 </form>
                 <div class="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
-                    <button data-filter="all" class="filter-btn active px-4 py-2 rounded-xl text-sm font-medium bg-white dark:bg-slate-800 shadow-sm text-indigo-600">All</button>
+                    <button data-filter="all" class="filter-btn active px-4 py-2 rounded-xl text-sm font-medium bg-white dark:bg-slate-800 shadow-sm text-indigo-600 dark:text-indigo-400">All</button>
                     <button data-filter="active" class="filter-btn px-4 py-2 rounded-xl text-sm font-medium text-slate-500 hover:bg-white dark:hover:bg-slate-800">Active</button>
                     <button data-filter="completed" class="filter-btn px-4 py-2 rounded-xl text-sm font-medium text-slate-500 hover:bg-white dark:hover:bg-slate-800">Done</button>
                 </div>
@@ -219,6 +232,12 @@
             <button onclick="deleteAccount()" class="w-full mt-3 py-3 bg-white dark:bg-slate-800 border border-rose-100 dark:border-rose-900/30 text-rose-500 rounded-xl text-sm font-medium hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors flex items-center justify-center gap-2">
                 <i data-lucide="trash-2" class="w-4 h-4"></i> Delete Account
             </button>
+
+            <div class="mt-6 text-center">
+                <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Developed By</p>
+                <p class="text-xs font-medium text-indigo-500 mt-1">Patel Rudra</p>
+            </div>
+
         </div>
     </div>
 
