@@ -1,4 +1,4 @@
-/* gamification.js */
+/* profile.js */
 
 // --- STATE ---
 let userProfile = JSON.parse(localStorage.getItem('auraProfile')) || {
