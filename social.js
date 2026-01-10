@@ -1,4 +1,4 @@
-/* social.js - Cloud Version */
+/* social.js  */
 
 const socialList = document.getElementById('contest-list'); 
 const searchInput = document.getElementById('user-search');
