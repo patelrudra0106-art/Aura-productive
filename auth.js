@@ -1,4 +1,4 @@
-/* auth.js - Cloud Version */
+/* auth.js - */
 
 // --- STATE ---
 let currentUser = JSON.parse(localStorage.getItem('auraUser')) || null;
