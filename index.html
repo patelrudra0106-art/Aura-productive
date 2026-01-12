@@ -12,13 +12,26 @@
             theme: {
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    animation: { 'fade-in': 'fadeIn 0.4s ease-out forwards' },
-                    keyframes: { fadeIn: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } } }
+                    animation: { 
+                        'fade-in': 'fadeIn 0.4s ease-out forwards',
+                        'slide-in': 'slideIn 0.3s ease-out forwards',
+                        'slide-out': 'slideOut 0.3s ease-in forwards',
+                        'pop': 'pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+                        'slide-in-top': 'slideInTop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards'
+                    },
+                    keyframes: { 
+                        fadeIn: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+                        slideIn: { '0%': { opacity: '0', transform: 'translateX(-20px)' }, '100%': { opacity: '1', transform: 'translateX(0)' } },
+                        slideOut: { '0%': { opacity: '1', transform: 'translateX(0)' }, '100%': { opacity: '0', transform: 'translateX(100%)' } },
+                        pop: { '0%': { opacity: '0', transform: 'scale(0.5)' }, '100%': { opacity: '1', transform: 'scale(1)' } },
+                        slideInTop: { '0%': { opacity: '0', transform: 'translateY(-50px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } }
+                    }
                 }
             }
         }
     </script>
     <script>
+        // Init Theme
         if (localStorage.getItem('auraTheme') === 'dark' || (!('auraTheme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         } else {
@@ -41,41 +54,33 @@
                 <h2 id="auth-title" class="text-2xl font-bold">Welcome to Aura</h2>
                 <p class="text-sm text-slate-500 mt-2">Login to track your points & contest</p>
             </div>
-            
             <form onsubmit="handleAuth(event)" class="space-y-4">
                 <div class="space-y-1">
                     <label class="text-xs font-bold text-slate-400 uppercase ml-1">Username</label>
                     <input type="text" id="auth-name" required class="w-full p-3.5 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:text-slate-400" placeholder="Enter your name">
                 </div>
-                
                 <div class="space-y-1">
                     <label class="text-xs font-bold text-slate-400 uppercase ml-1">Password</label>
                     <input type="password" id="auth-pass" required class="w-full p-3.5 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all" placeholder="••••••••">
                 </div>
-
                 <div id="field-confirm-pass" class="hidden space-y-1 animate-fade-in">
                     <label class="text-xs font-bold text-slate-400 uppercase ml-1">Confirm Password</label>
                     <input type="password" id="auth-confirm-pass" class="w-full p-3.5 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 outline-none focus:border-indigo-500 transition-all" placeholder="••••••••">
                 </div>
-
                 <button type="submit" id="auth-submit" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-500/30 transition-all mt-4 active:scale-95">Log In</button>
             </form>
-            
             <div class="mt-8 text-center text-sm text-slate-500">
                 <p id="toggle-auth-mode">New here? <span class="text-indigo-600 font-bold cursor-pointer hover:underline" onclick="toggleAuthMode()">Create Account</span></p>
             </div>
         </div>
-
         <div class="absolute bottom-6 flex flex-col items-center gap-1">
             <div class="text-slate-400 text-xs font-medium">Productivity • Focus • Contest</div>
             <div class="text-indigo-500/80 text-[10px] font-bold tracking-wide">Made by Patel Rudra</div>
         </div>
-
     </div>
 
-    <div id="main-app" class="hidden animate-fade-in flex flex-col min-h-screen">
-        
-        <header class="max-w-xl mx-auto w-full px-6 pt-10 pb-6 flex justify-between items-center bg-slate-50/80 dark:bg-[#0F172A]/80 backdrop-blur-md z-40">
+    <div id="main-app" class="hidden animate-fade-in flex flex-col min-h-screen pb-20"> 
+        <header class="max-w-xl mx-auto w-full px-6 pt-10 pb-6 flex justify-between items-center bg-slate-50/80 dark:bg-[#0F172A]/80 backdrop-blur-md z-40 sticky top-0">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 relative">
                     <svg viewBox="0 0 512 512" class="w-full h-full drop-shadow-md"><defs><linearGradient id="auraGradientSmall" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366f1" /><stop offset="100%" stop-color="#a855f7" /></linearGradient></defs><rect x="32" y="32" width="448" height="448" rx="128" fill="url(#auraGradientSmall)" /><circle cx="256" cy="256" r="140" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="32" /><path d="M180 260 L240 320 L340 180" fill="none" stroke="white" stroke-width="48" stroke-linecap="round" stroke-linejoin="round" /></svg>
@@ -91,15 +96,10 @@
                     <span id="streak-count" class="text-sm font-bold text-orange-600 dark:text-orange-400">0</span>
                 </div>
                 
-                <button id="theme-toggle" class="p-2.5 rounded-full bg-white dark:bg-slate-800/50 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                    <i data-lucide="moon" class="w-5 h-5 text-slate-500 dark:text-slate-400 dark:hidden"></i>
-                    <i data-lucide="sun" class="w-5 h-5 text-yellow-500 hidden dark:block"></i>
-                </button>
-
                 <button onclick="window.openAccount()" class="p-2.5 rounded-full bg-white dark:bg-slate-800/50 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                     <i data-lucide="user" class="w-5 h-5 text-indigo-500"></i>
                 </button>
-                <button onclick="openSettings()" class="p-2.5 rounded-full bg-white dark:bg-slate-800/50 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-sm">
+                <button onclick="openSettings()" class="p-2.5 rounded-full bg-white dark:bg-slate-800/50 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                     <i data-lucide="settings" class="w-5 h-5 text-slate-500 dark:text-slate-400"></i>
                 </button>
             </div>
@@ -176,20 +176,59 @@
                 </div>
             </section>
 
-            <section id="view-contest" class="view-section hidden transition-all duration-300 pt-4">
-                <div class="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-3xl p-6 text-white shadow-lg shadow-indigo-500/30 mb-8">
-                    <h2 class="text-xl font-bold mb-1">Global Contest</h2>
-                    <p class="text-indigo-100 text-sm opacity-90">Compete with real users</p>
+            <section id="view-reports" class="view-section hidden transition-all duration-300 pt-4">
+                 <div class="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-3xl p-6 text-white shadow-lg shadow-indigo-500/30 mb-8">
+                    <h2 class="text-xl font-bold mb-1">Your Analytics</h2>
+                    <p class="text-indigo-100 text-sm opacity-90">Track your productivity trends</p>
                 </div>
+                
+                <div class="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl mb-6 shadow-sm border border-slate-200 dark:border-slate-700">
+                    <button onclick="switchReportTab('daily')" data-type="daily" class="report-tab flex-1 py-2.5 rounded-xl text-sm font-medium text-slate-500 transition-all">Daily</button>
+                    <button onclick="switchReportTab('weekly')" data-type="weekly" class="report-tab flex-1 py-2.5 rounded-xl text-sm font-medium text-slate-500 transition-all">Weekly</button>
+                    <button onclick="switchReportTab('monthly')" data-type="monthly" class="report-tab flex-1 py-2.5 rounded-xl text-sm font-medium text-slate-500 transition-all">Monthly</button>
+                </div>
+
+                <div id="report-content" class="w-full">
+                </div>
+            </section>
+
+            <section id="view-contest" class="view-section hidden transition-all duration-300 pt-4">
+                <div class="bg-gradient-to-br from-orange-500 to-rose-600 rounded-3xl p-6 text-white shadow-lg shadow-orange-500/30 mb-6">
+                    <h2 class="text-xl font-bold mb-1">Global Contest</h2>
+                    <p class="text-orange-100 text-sm opacity-90">Compete with friends & world</p>
+                </div>
+                
+                <div class="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl mb-6 overflow-x-auto">
+                    <button id="tab-global" onclick="setSocialTab('global')" class="flex-1 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-md transition-all whitespace-nowrap px-4">Global</button>
+                    <button id="tab-league" onclick="setSocialTab('league')" class="flex-1 py-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-sm font-medium transition-all whitespace-nowrap px-4">League</button>
+                    <button id="tab-friends" onclick="setSocialTab('friends')" class="flex-1 py-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-sm font-medium transition-all whitespace-nowrap px-4">My Friends</button>
+                </div>
+
                 <div class="relative group mb-6">
                     <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                    <input type="text" id="user-search" placeholder="Search other users..." class="w-full pl-12 pr-4 py-4 rounded-2xl bg-white dark:bg-slate-800 border-2 border-transparent focus:border-indigo-500/30 outline-none shadow-sm transition-all">
+                    <input type="text" id="user-search" placeholder="Search user to add..." class="w-full pl-12 pr-4 py-4 rounded-2xl bg-white dark:bg-slate-800 border-2 border-transparent focus:border-indigo-500/30 outline-none shadow-sm transition-all">
                 </div>
-                <div id="contest-list" class="pb-10 min-h-[300px]"></div>
+                
+                <div id="contest-list" class="pb-24 min-h-[300px]"></div>
+            </section>
+
+            <section id="view-admin" class="view-section hidden transition-all duration-300 pt-4">
+                <div class="bg-slate-800 text-white rounded-3xl p-6 shadow-lg mb-6">
+                    <h2 class="text-xl font-bold mb-1 flex items-center gap-2"><i data-lucide="shield-alert" class="w-5 h-5"></i>Admin Panel</h2>
+                    <p class="text-slate-400 text-sm opacity-90">Manage and remove users</p>
+                </div>
+                
+                <div class="relative group mb-6">
+                    <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+                    <input type="text" id="admin-search" placeholder="Search user to delete..." class="w-full pl-12 pr-4 py-4 rounded-2xl bg-white dark:bg-slate-800 border-2 border-transparent focus:border-rose-500/30 outline-none shadow-sm transition-all">
+                </div>
+            
+                <div id="admin-user-list" class="space-y-3 pb-24">
+                    </div>
             </section>
         </div>
 
-        <nav class="w-full bg-white dark:bg-[#0F172A] border-t border-slate-200 dark:border-slate-800 flex justify-around items-center py-4 z-50">
+        <nav class="fixed bottom-0 left-0 w-full bg-white dark:bg-[#0F172A] border-t border-slate-200 dark:border-slate-800 flex justify-around items-center py-4 z-50 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
             <button onclick="switchView('tasks')" id="nav-tasks" class="nav-item active flex flex-col items-center gap-1 text-[10px] font-medium transition-all text-indigo-600 dark:text-indigo-400">
                 <i data-lucide="check-circle-2" class="w-6 h-6 mb-0.5"></i>
                 <span>Tasks</span>
@@ -198,11 +237,26 @@
                 <i data-lucide="timer" class="w-6 h-6 mb-0.5"></i>
                 <span>Focus</span>
             </button>
+            <button onclick="switchView('reports')" id="nav-reports" class="nav-item flex flex-col items-center gap-1 text-[10px] font-medium transition-all text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                <i data-lucide="bar-chart-2" class="w-6 h-6 mb-0.5"></i>
+                <span>Reports</span>
+            </button>
             <button onclick="switchView('contest')" id="nav-contest" class="nav-item flex flex-col items-center gap-1 text-[10px] font-medium transition-all text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
                 <i data-lucide="trophy" class="w-6 h-6 mb-0.5"></i>
                 <span>Contest</span>
             </button>
+            
+            <button onclick="switchView('admin')" id="nav-admin" class="nav-item hidden flex flex-col items-center gap-1 text-[10px] font-medium transition-all text-rose-500 hover:text-rose-600">
+                <i data-lucide="shield" class="w-6 h-6 mb-0.5"></i>
+                <span>Admin</span>
+            </button>
         </nav>
+    </div>
+
+    <div id="friend-modal" class="hidden fixed inset-0 z-[150] flex items-center justify-center px-4">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="document.getElementById('friend-modal').classList.add('hidden')"></div>
+        <div id="friend-modal-content" class="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl relative animate-fade-in border border-slate-100 dark:border-slate-700">
+        </div>
     </div>
 
     <div id="account-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
@@ -222,35 +276,95 @@
                     <div class="text-3xl font-bold tracking-tight"><span id="display-streak">0</span></div>
                 </div>
             </div>
-            <div class="p-4 bg-slate-50 dark:bg-slate-700/30 rounded-2xl mb-6">
+            
+            <div class="p-4 bg-slate-50 dark:bg-slate-700/30 rounded-2xl mb-4">
                  <p class="text-xs text-slate-500 dark:text-slate-400 text-center uppercase font-bold tracking-wider mb-2">Current User</p>
                  <p id="profile-name" class="text-center font-bold text-lg text-slate-700 dark:text-slate-200">Guest</p>
             </div>
+
+            <button onclick="toggleChangePass()" class="w-full mb-3 py-3 bg-indigo-50 dark:bg-slate-700/50 text-indigo-600 dark:text-indigo-400 rounded-xl text-sm font-medium hover:bg-indigo-100 dark:hover:bg-slate-600 transition-colors flex items-center justify-center gap-2">
+                <i data-lucide="key" class="w-4 h-4"></i> Change Password
+            </button>
+
+            <div id="change-pass-form" class="hidden mb-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700 space-y-3 animate-fade-in">
+                <input type="password" id="cp-old" placeholder="Current Password" class="w-full p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-600 text-sm outline-none focus:border-indigo-500 transition-colors">
+                <input type="password" id="cp-new" placeholder="New Password" class="w-full p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-600 text-sm outline-none focus:border-indigo-500 transition-colors">
+                <button onclick="submitChangePass()" id="cp-btn" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold shadow-md transition-all">Update Password</button>
+            </div>
+
             <button onclick="logout()" class="w-full py-3 bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400 rounded-xl text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors flex items-center justify-center gap-2">
                 <i data-lucide="log-out" class="w-4 h-4"></i> Sign Out
             </button>
             <button onclick="deleteAccount()" class="w-full mt-3 py-3 bg-white dark:bg-slate-800 border border-rose-100 dark:border-rose-900/30 text-rose-500 rounded-xl text-sm font-medium hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors flex items-center justify-center gap-2">
                 <i data-lucide="trash-2" class="w-4 h-4"></i> Delete Account
             </button>
-
             <div class="mt-6 text-center">
                 <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Developed By</p>
                 <p class="text-xs font-medium text-indigo-500 mt-1">Patel Rudra</p>
             </div>
-
         </div>
     </div>
 
     <div id="settings-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
         <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeSettings()"></div>
         <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl relative animate-fade-in border border-slate-100 dark:border-slate-700">
-            <h3 class="text-lg font-bold mb-4">Settings</h3>
-            <div class="space-y-4">
-                <div class="flex justify-between items-center"><label class="text-sm font-medium text-slate-500">Focus (min)</label><input type="number" id="setting-focus" value="25" class="w-20 p-2 bg-slate-100 dark:bg-slate-700 rounded-lg text-center outline-none"></div>
-                <div class="flex justify-between items-center"><label class="text-sm font-medium text-slate-500">Short Break</label><input type="number" id="setting-short" value="5" class="w-20 p-2 bg-slate-100 dark:bg-slate-700 rounded-lg text-center outline-none"></div>
-                <div class="flex justify-between items-center"><label class="text-sm font-medium text-slate-500">Long Break</label><input type="number" id="setting-long" value="15" class="w-20 p-2 bg-slate-100 dark:bg-slate-700 rounded-lg text-center outline-none"></div>
+            <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                <i data-lucide="settings" class="w-5 h-5 text-indigo-500"></i> Settings
+            </h3>
+            
+            <div class="space-y-6">
+                <div>
+                     <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-3">General</label>
+                     <button onclick="openNotificationHistory()" class="w-full flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-white dark:bg-slate-600 rounded-lg text-indigo-500 dark:text-indigo-400"><i data-lucide="bell" class="w-4 h-4"></i></div>
+                            <span class="text-sm font-medium text-slate-700 dark:text-slate-200">Notifications</span>
+                        </div>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+                     </button>
+                </div>
+
+                <div>
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-3">Appearance</label>
+                    <div class="bg-slate-100 dark:bg-slate-700/50 p-1 rounded-xl flex">
+                        <button onclick="setTheme('light')" id="theme-btn-light" class="flex-1 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 text-slate-500">
+                            <i data-lucide="sun" class="w-4 h-4"></i> Light
+                        </button>
+                        <button onclick="setTheme('dark')" id="theme-btn-dark" class="flex-1 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 text-slate-500">
+                            <i data-lucide="moon" class="w-4 h-4"></i> Dark
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-3">Timer Duration (Minutes)</label>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center"><label class="text-sm font-medium text-slate-500 dark:text-slate-300">Focus</label><input type="number" id="setting-focus" class="w-20 p-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-center outline-none"></div>
+                        <div class="flex justify-between items-center"><label class="text-sm font-medium text-slate-500 dark:text-slate-300">Short Break</label><input type="number" id="setting-short" class="w-20 p-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-center outline-none"></div>
+                        <div class="flex justify-between items-center"><label class="text-sm font-medium text-slate-500 dark:text-slate-300">Long Break</label><input type="number" id="setting-long" class="w-20 p-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-center outline-none"></div>
+                    </div>
+                </div>
             </div>
-            <button onclick="saveSettings()" class="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-medium transition-colors">Save Changes</button>
+
+            <button onclick="saveSettings()" class="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-medium transition-colors shadow-lg shadow-indigo-500/30">Save Changes</button>
+        </div>
+    </div>
+
+    <div id="notification-history-modal" class="hidden fixed inset-0 z-[150] flex items-center justify-center px-4">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeNotificationHistory()"></div>
+        <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl relative animate-fade-in border border-slate-100 dark:border-slate-700 flex flex-col max-h-[80vh]">
+            <div class="flex justify-between items-center mb-4 shrink-0">
+                <h3 class="text-lg font-bold flex items-center gap-2">
+                    <i data-lucide="bell" class="w-5 h-5 text-indigo-500"></i> Notifications
+                </h3>
+                <div class="flex gap-3">
+                    <button onclick="clearAllNotifications()" class="text-xs font-medium text-slate-400 hover:text-rose-500 uppercase tracking-wide">Clear</button>
+                    <button onclick="closeNotificationHistory()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+            </div>
+            
+            <div id="notification-history-list" class="space-y-3 overflow-y-auto pr-2 flex-1 scrollbar-hide">
+                </div>
         </div>
     </div>
 
@@ -261,7 +375,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
     <script>
-        // --- YOUR CONFIGURATION ---
         const firebaseConfig = {
           apiKey: "AIzaSyCq2wOw4L_bVUC4rINviWMBGjEtOALmgnE",
           authDomain: "auratask-fffd1.firebaseapp.com",
@@ -272,10 +385,8 @@
           appId: "1:521351004914:web:85825ddda114241372866b",
           measurementId: "G-4D1Q3FE9NK"
         };
-      
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        console.log("Firebase Connected");
     </script>
 
     <script src="auth.js"></script>
@@ -284,25 +395,68 @@
     <script src="profile.js"></script>
     <script src="app.js"></script>
     <script src="pomodoro.js"></script>
+    <script src="reports.js"></script>
     
     <script>
         lucide.createIcons();
         function switchView(viewName) {
-            const views = { tasks: document.getElementById('view-tasks'), focus: document.getElementById('view-focus'), contest: document.getElementById('view-contest') };
-            const navs = { tasks: document.getElementById('nav-tasks'), focus: document.getElementById('nav-focus'), contest: document.getElementById('nav-contest') };
+            const views = { 
+                tasks: document.getElementById('view-tasks'), 
+                focus: document.getElementById('view-focus'), 
+                reports: document.getElementById('view-reports'),
+                contest: document.getElementById('view-contest'),
+                admin: document.getElementById('view-admin') 
+            };
+            const navs = { 
+                tasks: document.getElementById('nav-tasks'), 
+                focus: document.getElementById('nav-focus'), 
+                reports: document.getElementById('nav-reports'),
+                contest: document.getElementById('nav-contest'),
+                admin: document.getElementById('nav-admin') 
+            };
             
-            Object.values(views).forEach(el => el.classList.add('hidden'));
-            Object.values(navs).forEach(el => { 
-                el.classList.remove('active', 'text-indigo-600', 'dark:text-indigo-400'); 
-                el.classList.add('text-slate-400', 'hover:text-slate-600', 'dark:hover:text-slate-300'); 
+            // Hide all views and reset animation
+            Object.values(views).forEach(el => { 
+                if(el) {
+                    el.classList.add('hidden'); 
+                    el.classList.remove('animate-fade-in'); 
+                }
             });
             
-            views[viewName].classList.remove('hidden');
-            const activeNav = navs[viewName];
-            activeNav.classList.add('active', 'text-indigo-600', 'dark:text-indigo-400');
-            activeNav.classList.remove('text-slate-400', 'hover:text-slate-600', 'dark:hover:text-slate-300');
+            // Reset nav buttons (Check if nav exists first)
+            Object.values(navs).forEach(el => { 
+                if(el) {
+                    el.classList.remove('active', 'text-indigo-600', 'dark:text-indigo-400'); 
+                    el.classList.add('text-slate-400', 'hover:text-slate-600', 'dark:hover:text-slate-300'); 
+                    // Admin button has specific red hover style, let's reset it to base slate first
+                    if(el.id === 'nav-admin') {
+                         el.classList.remove('text-rose-500');
+                    }
+                }
+            });
             
+            // Show active view with fade animation
+            if(views[viewName]) {
+                views[viewName].classList.remove('hidden');
+                void views[viewName].offsetWidth; // Trigger reflow
+                views[viewName].classList.add('animate-fade-in');
+            }
+            
+            // Highlight active nav
+            if(navs[viewName]) {
+                if(viewName === 'admin') {
+                     navs[viewName].classList.add('text-rose-500');
+                     navs[viewName].classList.remove('text-slate-400');
+                } else {
+                    navs[viewName].classList.add('active', 'text-indigo-600', 'dark:text-indigo-400');
+                    navs[viewName].classList.remove('text-slate-400', 'hover:text-slate-600', 'dark:hover:text-slate-300');
+                }
+            }
+            
+            // Trigger View Specific Data Loads
             if(viewName === 'contest' && window.loadContestData) window.loadContestData();
+            if(viewName === 'reports' && window.initReports) window.initReports();
+            if(viewName === 'admin' && window.loadAdminPanel) window.loadAdminPanel();
         }
     </script>
 </body>
