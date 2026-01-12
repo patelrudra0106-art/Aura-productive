@@ -1,4 +1,4 @@
-/* auth.js - Admin & Auth Logic */
+/* auth.js - Admin, Auth & Cloud Sync Logic */
 
 // --- STATE ---
 let currentUser = JSON.parse(localStorage.getItem('auraUser')) || null;
@@ -62,7 +62,6 @@ function checkAdminAccess() {
         
         const search = document.getElementById('admin-search');
         if (search) {
-            // Replace to remove old listeners
             const newSearch = search.cloneNode(true);
             search.parentNode.replaceChild(newSearch, search);
             newSearch.addEventListener('input', (e) => loadAdminPanel(e.target.value));
@@ -98,7 +97,6 @@ window.loadAdminPanel = function(filter = '') {
         const currentMonth = new Date().toISOString().slice(0, 7);
         const activeUsers = users.filter(u => u.lastActiveMonth === currentMonth).length;
 
-        // --- FILTERING ---
         if (filter) {
             users = users.filter(u => u.name && u.name.toLowerCase().includes(filter.toLowerCase()));
         }
@@ -151,8 +149,6 @@ window.loadAdminPanel = function(filter = '') {
             const div = document.createElement('div');
             div.className = `flex items-center justify-between p-4 rounded-2xl border shadow-sm animate-fade-in ${rowClass}`;
             
-            // Password Visibility Logic
-            // Admin can see password, toggle hiding
             div.innerHTML = `
                 <div class="flex items-center gap-4">
                     <div class="p-2 ${isAdmin ? 'bg-indigo-100 text-indigo-600' : (isBanned ? 'bg-rose-100 text-rose-500' : 'bg-slate-100 dark:bg-slate-700 text-slate-500')} rounded-full">
@@ -160,7 +156,7 @@ window.loadAdminPanel = function(filter = '') {
                     </div>
                     <div>
                         <p class="text-sm font-bold ${isBanned ? 'text-rose-600 dark:text-rose-400 line-through' : 'text-slate-700 dark:text-slate-200'}">${user.name} ${isBanned ? '<span class="text-[10px] no-line-through bg-rose-500 text-white px-1 rounded ml-1">BANNED</span>' : ''}</p>
-                        <p class="text-[10px] text-slate-400">Points: ${user.points || 0}</p>
+                        <p class="text-[10px] text-slate-400">Points: ${user.points || 0} • Coins: ${user.coins || 0}</p>
                         
                         <div class="flex items-center gap-2 mt-0.5">
                             <p id="pass-${safeName}" class="text-[10px] text-slate-400 font-mono">••••••</p>
@@ -175,6 +171,9 @@ window.loadAdminPanel = function(filter = '') {
                     </button>
                     <button onclick="adminEditPoints('${safeName}', ${user.points || 0})" class="p-2 text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors" title="Edit Points">
                         <i data-lucide="pencil" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="adminEditCoins('${safeName}', ${user.coins || 0})" class="p-2 text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors" title="Edit Coins">
+                        <i data-lucide="coins" class="w-4 h-4"></i>
                     </button>
                     <button onclick="adminToggleBan('${safeName}', ${isBanned})" class="p-2 ${isBanned ? 'text-emerald-500 bg-emerald-50' : 'text-orange-400 hover:bg-orange-50'} rounded-lg transition-colors" title="${isBanned ? 'Unban' : 'Ban'} User">
                         <i data-lucide="${isBanned ? 'check-circle' : 'ban'}" class="w-4 h-4"></i>
@@ -244,6 +243,7 @@ window.adminToggleBan = function(targetName, currentStatus) {
     }
 };
 
+// --- ADMIN EDIT POINTS (Updates Points AND Coins) ---
 window.adminEditPoints = async function(targetName, currentDisplayPoints) {
     if (!currentUser || currentUser.name !== 'Owner') return;
 
@@ -259,15 +259,49 @@ window.adminEditPoints = async function(targetName, currentDisplayPoints) {
         if (!data) return;
 
         const oldPoints = data.points || 0;
-        const oldMonthly = data.monthlyPoints || 0;
         const diff = newPoints - oldPoints;
+        
+        // 1. Update Monthly Points
+        const oldMonthly = data.monthlyPoints || 0;
         const newMonthly = Math.max(0, oldMonthly + diff);
+
+        // 2. Update Coins (Sync coins with points added)
+        const oldCoins = data.coins || 0;
+        let newCoins = oldCoins;
+        if (diff > 0) {
+            newCoins += diff;
+        }
+
+        // 3. Update Last Active Month (Ensures they show in contest)
+        const currentMonth = new Date().toISOString().slice(0, 7);
 
         await firebase.database().ref('users/' + targetName).update({
             points: newPoints,
-            monthlyPoints: newMonthly
+            monthlyPoints: newMonthly,
+            coins: newCoins,
+            lastActiveMonth: currentMonth
         });
         
+        loadAdminPanel();
+    } catch (err) {
+        alert("Error: " + err.message);
+    }
+};
+
+// --- NEW: ADMIN EDIT COINS (Updates Coins ONLY) ---
+window.adminEditCoins = async function(targetName, currentCoins) {
+    if (!currentUser || currentUser.name !== 'Owner') return;
+
+    const newCoinsStr = prompt(`Update COINS for ${targetName} (Current: ${currentCoins}):`, currentCoins);
+    if (newCoinsStr === null || newCoinsStr.trim() === "") return;
+
+    const newCoins = parseInt(newCoinsStr);
+    if (isNaN(newCoins)) return alert("Invalid number.");
+
+    try {
+        await firebase.database().ref('users/' + targetName).update({
+            coins: newCoins
+        });
         loadAdminPanel();
     } catch (err) {
         alert("Error: " + err.message);
@@ -343,6 +377,8 @@ window.handleAuth = async function(e) {
                 password: password,
                 points: 0,
                 monthlyPoints: 0,
+                coins: 0,          // START WITH 0 COINS
+                inventory: [],     // START WITH EMPTY INVENTORY
                 streak: 0,
                 friends: [], 
                 isBanned: false,
@@ -371,6 +407,10 @@ function loginUser(user) {
     profile.monthlyPoints = user.monthlyPoints || 0;
     profile.lastActiveMonth = user.lastActiveMonth || new Date().toISOString().slice(0, 7);
     
+    // SYNC SHOP DATA
+    profile.coins = user.coins || 0;
+    profile.inventory = user.inventory || [];
+    
     localStorage.setItem('auraProfile', JSON.stringify(profile));
     
     authOverlay.classList.add('hidden');
@@ -378,8 +418,8 @@ function loginUser(user) {
     window.location.reload(); 
 }
 
-// --- SYNC SCORE TO CLOUD ---
-window.syncUserToDB = function(newPoints, newStreak, monthlyPoints, lastActiveMonth) {
+// --- SYNC SCORE TO CLOUD (UPDATED) ---
+window.syncUserToDB = function(newPoints, newStreak, monthlyPoints, lastActiveMonth, coins, inventory) {
     if (!currentUser) return;
 
     const stats = JSON.parse(localStorage.getItem('auraStats')) || { minutes: 0, sessions: 0 };
@@ -410,10 +450,13 @@ window.syncUserToDB = function(newPoints, newStreak, monthlyPoints, lastActiveMo
         }
     });
 
-    if(monthlyPoints === undefined) {
+    // Handle missing params by fetching from local state if not provided
+    if(monthlyPoints === undefined || coins === undefined) {
         const p = JSON.parse(localStorage.getItem('auraProfile')) || {};
         monthlyPoints = p.monthlyPoints || 0;
         lastActiveMonth = p.lastActiveMonth || new Date().toISOString().slice(0, 7);
+        coins = p.coins || 0;
+        inventory = p.inventory || [];
     }
 
     firebase.database().ref('users/' + currentUser.name).update({
@@ -421,6 +464,8 @@ window.syncUserToDB = function(newPoints, newStreak, monthlyPoints, lastActiveMo
         streak: newStreak,
         monthlyPoints: monthlyPoints,
         lastActiveMonth: lastActiveMonth,
+        coins: coins,          // SYNC COINS
+        inventory: inventory,  // SYNC INVENTORY
         totalMinutes: stats.minutes,
         totalSessions: stats.sessions || 0,
         totalTasks: completedTasks,
@@ -439,18 +484,46 @@ function listenToStats() {
                  window.location.reload();
              }
 
-             let profile = JSON.parse(localStorage.getItem('auraProfile')) || {};
+             // FETCH CURRENT LOCAL STATE FIRST
+             let currentLocal = JSON.parse(localStorage.getItem('auraProfile')) || {};
+             let hasUpdates = false;
+
              if(data.friends) {
                  currentUser.friends = data.friends;
                  localStorage.setItem('auraUser', JSON.stringify(currentUser));
              }
-             if(data.points !== profile.points) {
-                 profile.points = data.points;
-                 profile.streak = data.streak;
-                 profile.monthlyPoints = data.monthlyPoints || 0;
-                 localStorage.setItem('auraProfile', JSON.stringify(profile));
+             
+             // Check Points & Coins changes from cloud
+             // Use explicit checks to see if cloud data differs from local storage
+             if(data.points !== currentLocal.points || data.coins !== currentLocal.coins) {
+                 currentLocal.points = data.points;
+                 currentLocal.streak = data.streak;
+                 currentLocal.monthlyPoints = data.monthlyPoints || 0;
+                 currentLocal.coins = data.coins || 0;
+                 currentLocal.inventory = data.inventory || [];
+                 hasUpdates = true;
+             }
+             
+             if(hasUpdates) {
+                 // 1. Update LocalStorage
+                 localStorage.setItem('auraProfile', JSON.stringify(currentLocal));
+                 
+                 // 2. Update Global Variable for instant UI reflection (FIXED)
+                 if (typeof userProfile !== 'undefined') {
+                     userProfile.points = currentLocal.points;
+                     userProfile.coins = currentLocal.coins;
+                     userProfile.inventory = currentLocal.inventory;
+                 }
+                 
+                 // 3. Update UI Elements
                  const pDisplay = document.getElementById('display-points');
                  if(pDisplay) pDisplay.textContent = data.points.toLocaleString();
+                 
+                 const shopBalance = document.getElementById('shop-balance');
+                 if(shopBalance) shopBalance.textContent = (data.coins || 0).toLocaleString();
+                 
+                 // If name/badge changed
+                 if(window.updateProfileUI) window.updateProfileUI();
              }
         }
     });
