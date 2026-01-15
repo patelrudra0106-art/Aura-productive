@@ -1,4 +1,4 @@
-/* social.js - S1N Industrial Theme Update */
+/* social.js - S1N Industrial Theme Update (Fixed) */
 
 const socialList = document.getElementById('contest-list'); 
 const searchInput = document.getElementById('user-search');
@@ -266,11 +266,21 @@ function renderLeaderboard(filter = '') {
         users = users.map(u => {
             let score = 0;
             const userLastMonth = u.lastActiveMonth || "";
-            
+            const totalPoints = u.points || 0;
+            const monthlyPoints = u.monthlyPoints || 0;
+
             if (socialViewMode === 'league') {
-                score = (userLastMonth === currentMonthStr) ? (u.monthlyPoints || 0) : 0;
+                // FIXED LOGIC: Clamp monthly points to Total points.
+                // If database has bad data (monthly > total), we clamp it here so it looks correct.
+                let effectiveMonthly = (userLastMonth === currentMonthStr) ? monthlyPoints : 0;
+                
+                if (effectiveMonthly > totalPoints) {
+                    effectiveMonthly = totalPoints; 
+                }
+                
+                score = effectiveMonthly;
             } else {
-                score = u.points || 0; 
+                score = totalPoints; 
             }
             return { ...u, displayScore: score };
         });

@@ -10,7 +10,7 @@ let userProfile = JSON.parse(localStorage.getItem('auraProfile')) || {
     lastActiveMonth: new Date().toISOString().slice(0, 7) 
 };
 
-// --- CHECK RESET LOGIC (MONTHLY ONLY) ---
+// --- CHECK RESET LOGIC ---
 (function checkTimeResets() {
     const now = new Date();
     const currentMonth = now.toISOString().slice(0, 7); 
@@ -50,10 +50,8 @@ window.addPoints = function(amount, reason) {
     saveProfile();
     updateProfileUI();
     
-    // Sync to Cloud
     if(window.syncUserToDB) window.syncUserToDB(userProfile.points, userProfile.streak, userProfile.monthlyPoints, userProfile.lastActiveMonth);
     
-    // Notification
     if(amount > 0 && window.showNotification) window.showNotification(`CREDITS +${amount}`, reason, 'success');
 };
 
@@ -88,36 +86,26 @@ function updateProfileUI() {
     if(streakDisplay) streakDisplay.textContent = userProfile.streak;
     if(profileNameDisplay) profileNameDisplay.textContent = userProfile.name || 'User';
 
-    // RENDER BADGES
     renderProfileBadges();
 }
 
-// --- BADGE RENDERING (S1N Style) ---
+// --- BADGE RENDERING (Fixed Grid Layout) ---
 function renderProfileBadges() {
     const user = JSON.parse(localStorage.getItem('auraUser'));
     const inventory = (user && user.inventory) ? user.inventory : [];
     
-    const modalContent = document.querySelector('#account-modal > div');
-    if (!modalContent) return;
+    // Target the specific container ID we added in index.html
+    const badgeContainer = document.getElementById('profile-badges');
+    if (!badgeContainer) return;
 
-    let badgeContainer = document.getElementById('profile-badges');
-    
     if (inventory.length === 0) {
-        if(badgeContainer) badgeContainer.innerHTML = '';
+        badgeContainer.innerHTML = '';
+        badgeContainer.className = 'hidden'; // Hide container if empty to save space
         return;
     }
 
-    if (!badgeContainer) {
-        badgeContainer = document.createElement('div');
-        badgeContainer.id = 'profile-badges';
-        badgeContainer.className = "flex flex-wrap gap-2 justify-center mb-6 pt-4 border-t border-border";
-        
-        // Insert before the name box
-        const nameBox = document.querySelector('#account-modal .bg-input.rounded-xl.mb-4');
-        if (nameBox) {
-            nameBox.parentNode.insertBefore(badgeContainer, nameBox);
-        }
-    }
+    // Force Grid Layout: 5 columns, centered items
+    badgeContainer.className = "grid grid-cols-5 gap-2 mb-4 justify-items-center";
 
     // Icon Lookup
     const badgeMap = {
@@ -129,12 +117,14 @@ function renderProfileBadges() {
     };
 
     badgeContainer.innerHTML = '';
+    
+    // Fill with empty slots if needed to maintain grid look, or just render owned
     inventory.forEach(itemId => {
         const icon = badgeMap[itemId] || 'award';
         
         const badge = document.createElement('div');
-        // Industrial Badge: Bordered, no background
-        badge.className = `p-2 rounded-md border border-border text-muted hover:text-main hover:border-main transition-colors cursor-help`;
+        // Fixed square size (w-10 h-10) to prevent full-width stacking
+        badge.className = `w-10 h-10 flex items-center justify-center rounded-lg border border-border text-muted hover:text-main hover:border-main transition-colors cursor-help bg-card`;
         badge.title = itemId;
         badge.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5"></i>`;
         badgeContainer.appendChild(badge);
@@ -155,6 +145,7 @@ window.openAccount = function() {
 window.closeAccount = function() {
     const modal = document.getElementById('account-modal');
     const passForm = document.getElementById('change-pass-form');
+    // Hide password form when closing to reset state
     if(passForm) passForm.classList.add('hidden');
     if(modal) modal.classList.add('hidden');
 };
