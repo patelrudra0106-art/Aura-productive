@@ -227,3 +227,42 @@ function checkEmptyState(count) {
         else msg.textContent = "No tasks here. Relax or add one!";
     }
 }
+/* Theme Logic */
+window.setTheme = function(mode) {
+    const html = document.documentElement;
+    const btnLight = document.getElementById('theme-btn-light');
+    const btnDark = document.getElementById('theme-btn-dark');
+
+    // 1. Apply Class & Save
+    if (mode === 'dark') {
+        html.classList.add('dark');
+        localStorage.setItem('auraTheme', 'dark');
+    } else {
+        html.classList.remove('dark');
+        localStorage.setItem('auraTheme', 'light');
+    }
+
+    // 2. Update Button UI (Visual Feedback)
+    const activeClass = "flex-1 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-400 shadow-sm ring-1 ring-black/5";
+    const inactiveClass = "flex-1 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300";
+
+    if (btnLight && btnDark) {
+        if (mode === 'dark') {
+            btnDark.className = activeClass;
+            btnLight.className = inactiveClass;
+        } else {
+            btnLight.className = activeClass;
+            btnDark.className = inactiveClass;
+        }
+    }
+};
+
+// Initialize Button State on Load
+document.addEventListener('DOMContentLoaded', () => {
+    const currentTheme = localStorage.getItem('auraTheme') === 'dark' || 
+        (!('auraTheme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches) 
+        ? 'dark' : 'light';
+    
+    // Update the buttons visually without re-triggering the logic
+    window.setTheme(currentTheme);
+});
