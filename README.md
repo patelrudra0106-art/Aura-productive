@@ -1,4 +1,4 @@
-# Aura Productivity App 🚀
+# S1N Productivity App 🚀
 
 A comprehensive productivity application featuring Task Management, Pomodoro Timer, Analytics, and a Gamified Social Shop.
 
