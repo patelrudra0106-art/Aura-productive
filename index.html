@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta name="google-site-verification" content="uDPttA7U4ty0mvswDYmsFiVSfBALqcP7OmrDkmEawXg" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>S1N Productive</title>
@@ -87,23 +86,23 @@
 
     <div id="main-app" class="hidden flex flex-col min-h-screen pb-24 max-w-lg mx-auto w-full relative"> 
         
-        <header class="px-6 pt-12 pb-8 sticky top-0 z-40 bg-body/95 backdrop-blur-sm transition-all">
-            <div class="flex justify-between items-start mb-2">
+        <header class="px-6 pt-6 pb-4 sticky top-0 z-40 bg-body/95 backdrop-blur-sm transition-all">
+            <div class="flex justify-between items-start mb-1">
                 <div>
-                    <h1 class="text-4xl font-extrabold tracking-tighter leading-[0.9]">
+                    <h1 class="text-2xl font-extrabold tracking-tighter leading-tight">
                         S1N<br>PRODUCTIVE.
                     </h1>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="window.openAccount()" class="w-10 h-10 rounded-full border border-border flex items-center justify-center hover:bg-card transition-colors">
-                        <i data-lucide="user" class="w-5 h-5"></i>
+                    <button onclick="window.openAccount()" class="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-card transition-colors">
+                        <i data-lucide="user" class="w-4 h-4"></i>
                     </button>
-                    <button onclick="openSettings()" class="w-10 h-10 rounded-full border border-border flex items-center justify-center hover:bg-card transition-colors">
-                        <i data-lucide="settings" class="w-5 h-5"></i>
+                    <button onclick="openSettings()" class="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-card transition-colors">
+                        <i data-lucide="settings" class="w-4 h-4"></i>
                     </button>
                 </div>
             </div>
-            <div class="flex items-center gap-4 mt-4">
+            <div class="flex items-center gap-4 mt-2">
                 <div class="flex items-center gap-2 px-3 py-1 border border-border rounded-full bg-card">
                     <i data-lucide="flame" class="w-3 h-3 text-main"></i>
                     <span id="streak-count" class="text-xs font-bold font-mono">0</span>
@@ -111,7 +110,6 @@
                 <div class="h-px flex-1 bg-border"></div> 
             </div>
         </header>
-
         <div class="px-6 flex-1 w-full relative">
             
             <section id="view-tasks" class="view-section animate-fade-in">
