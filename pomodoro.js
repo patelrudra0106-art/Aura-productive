@@ -7,7 +7,6 @@ let settings = JSON.parse(localStorage.getItem('auraTimerSettings')) || {
     long: 15
 };
 
-// S1N Theme: Modes are functional, not color-coded.
 let MODES = {
     work: { time: settings.work * 60, label: 'FOCUS PROTOCOL' },
     short: { time: settings.short * 60, label: 'SHORT RECHARGE' },
@@ -34,8 +33,6 @@ const modeBtns = {
     short: document.getElementById('mode-short'),
     long: document.getElementById('mode-long')
 };
-const statSessions = document.getElementById('sessions-count'); 
-const historyList = document.getElementById('history-list'); 
 const activeTaskDisplay = document.getElementById('active-task-display');
 const focusTaskText = document.getElementById('focus-task-text');
 
@@ -51,7 +48,6 @@ function initPomodoro() {
         progressRing.style.strokeDashoffset = 0;
     }
     updateDisplay();
-    // updateStatsDisplay(); 
     renderHistory(); 
     setupModeListeners();
 }
@@ -64,7 +60,7 @@ function updateDisplay() {
     const s = (timeLeft % 60).toString().padStart(2, '0');
     timerDisplay.textContent = `${m}:${s}`;
     
-    // Ring Progress (Monochrome)
+    // Ring Progress
     if(progressRing) {
         const totalTime = MODES[currentMode].time;
         const offset = CIRCLE_CIRCUMFERENCE - (timeLeft / totalTime) * CIRCLE_CIRCUMFERENCE;
@@ -78,7 +74,6 @@ function startTimer() {
     if (isRunning) return;
     isRunning = true;
     
-    // Industrial Button State: "Active"
     toggleBtn.innerHTML = '<i data-lucide="pause" class="w-5 h-5 fill-current"></i> Pause';
     toggleBtn.classList.add('opacity-90'); 
     
@@ -100,7 +95,6 @@ function pauseTimer() {
     isRunning = false;
     clearInterval(timerInterval);
     
-    // Industrial Button State: "Ready"
     toggleBtn.innerHTML = '<i data-lucide="play" class="w-5 h-5 fill-current"></i> Start';
     toggleBtn.classList.remove('opacity-90');
     
@@ -124,20 +118,29 @@ function completeTimer() {
     const alarm = document.getElementById('alarm-sound');
     if(alarm) alarm.play().catch(()=>{});
 
-    if (window.showNotification) {
-        const title = currentMode === 'work' ? "SESSION COMPLETE" : "BREAK OVER";
-        const body = currentMode === 'work' ? "Protocol finished. +50 Credits." : "Return to focus.";
-        window.showNotification(title, body, "success"); 
-    }
-
     if(currentMode === 'work') {
-        // --- ENSURING 50 POINTS ---
-        if(window.addPoints) window.addPoints(50, "Focus Session");
-        
         const minutes = MODES.work.time / 60;
+        
+        // --- LOOPHOLE FIX: DYNAMIC POINTS ---
+        // Give 2 points per minute. 
+        // 25 mins = 50 points. 1 min = 2 points.
+        // This prevents users setting 1 min timer to get 50 points.
+        const earnedPoints = Math.floor(minutes * 2);
+        
+        if (window.showNotification) {
+            window.showNotification("SESSION COMPLETE", `Protocol finished. +${earnedPoints} Credits.`, "success"); 
+        }
+
+        if(window.addPoints) window.addPoints(earnedPoints, "Focus Session");
+        
         saveStats(minutes);
         addToHistory(minutes, currentFocusTask || 'Focus Session');
+    } else {
+        if (window.showNotification) {
+            window.showNotification("BREAK OVER", "Return to focus.", "success"); 
+        }
     }
+    
     timerStatus.textContent = 'COMPLETE';
 }
 
@@ -177,8 +180,6 @@ window.setFocusTask = function(taskText) {
     currentFocusTask = taskText;
     if(focusTaskText) focusTaskText.textContent = taskText;
     if(activeTaskDisplay) activeTaskDisplay.classList.remove('hidden');
-    
-    // Switch view to Focus automatically
     if(window.switchView) window.switchView('focus');
     
     setMode('work');
@@ -209,13 +210,11 @@ function addToHistory(duration, label) {
     history.unshift(entry);
     if(history.length > 30) history.pop();
     localStorage.setItem('auraHistory', JSON.stringify(history));
-    
-    // If we have a history list in the Settings/Notification modal
     renderHistory();
 }
 
 function renderHistory() {
-    // Placeholder for potential future history UI components
+    // Placeholder for history UI
 }
 
 window.clearHistory = function() {
@@ -232,16 +231,13 @@ function setMode(mode) {
     currentMode = mode;
     timeLeft = MODES[mode].time;
     
-    // Button Styles: Active = Black Bg/White Text. Inactive = Transparent/Gray Text
     Object.keys(modeBtns).forEach(k => {
         const btn = modeBtns[k];
         if(!btn) return;
         
         if(k === mode) {
-            // Active
             btn.className = "px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-full border border-main bg-main text-body shadow-sm transition-colors";
         } else {
-            // Inactive
             btn.className = "px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-full border border-transparent text-muted hover:border-border transition-colors";
         }
     });
@@ -258,5 +254,4 @@ function setupModeListeners() {
 if(toggleBtn) toggleBtn.addEventListener('click', () => isRunning ? pauseTimer() : startTimer());
 if(resetBtn) resetBtn.addEventListener('click', resetTimer);
 
-// Run init
 initPomodoro();

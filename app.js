@@ -78,7 +78,8 @@ function addTask() {
         completed: false,
         date: dateInput.value,
         time: timeInput.value,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        earnedPoints: 0 // Initialize ledger
     };
 
     tasks.unshift(newTask);
@@ -101,28 +102,27 @@ function toggleTask(id) {
     const taskIndex = tasks.findIndex(t => t.id === id);
     
     if (taskIndex > -1) {
+        // Toggle State
         tasks[taskIndex].completed = !tasks[taskIndex].completed;
         
-        // Logic for Points & Stats
         if (tasks[taskIndex].completed) {
+            // --- MARKING AS DONE ---
             tasks[taskIndex].completedAt = Date.now();
             
-            // Audio Feedback (Subtle Click)
+            // Audio & Confetti
             const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3'); 
             audio.volume = 0.2;
             audio.play().catch(()=>{});
 
-            // Confetti (Clean bursts)
             if(window.confetti) {
                 const rect = document.getElementById(`task-${id}`).getBoundingClientRect();
                 const x = rect.left / window.innerWidth + (rect.width / window.innerWidth) / 2;
                 const y = rect.top / window.innerHeight;
-                // Monochrome Confetti
                 confetti({ particleCount: 40, spread: 40, origin: { x, y }, colors: ['#000000', '#FFFFFF', '#9CA3AF'] });
             }
 
-            // --- CHANGED POINT LOGIC ---
-            let points = 20; // Default: Before deadline or no deadline
+            // 1. CALCULATE POINTS
+            let points = 20; 
             let reason = "Task Complete";
 
             if (tasks[taskIndex].date) {
@@ -132,20 +132,33 @@ function toggleTask(id) {
                 
                 // Compare current time with deadline
                 if (new Date() > dueDate) {
-                    points = -50;
+                    points = -50; // Late Penalty
                     reason = "Late Penalty";
                 }
             }
 
-            // Execute Point Update
+            // 2. SAVE THE POINTS TO THE TASK (The Ledger)
+            tasks[taskIndex].earnedPoints = points;
+
+            // 3. EXECUTE UPDATE
             if(window.addPoints) window.addPoints(points, reason);
-            
-            // Only update streak if points were positive (optional logic, but keeps streak clean)
             if(window.updateStreak && points > 0) window.updateStreak();
-            // ---------------------------
 
         } else {
+            // --- MARKING AS UNDONE ---
             tasks[taskIndex].completedAt = null;
+            
+            // 4. RETRIEVE EXACT POINTS TO REVERSE
+            // If we earned -50 (late), this calculates -(-50) which adds 50 back.
+            // If we earned 20, this calculates -(20) which removes 20.
+            const pointsToRevert = tasks[taskIndex].earnedPoints || 0;
+            
+            if(window.addPoints && pointsToRevert !== 0) {
+                window.addPoints(-pointsToRevert, "Task Undone");
+            }
+            
+            // 5. CLEAR THE LEDGER
+            tasks[taskIndex].earnedPoints = 0;
         }
 
         saveTasks(tasks);
@@ -156,6 +169,11 @@ function toggleTask(id) {
 function deleteTask(id) {
     if(confirm("Terminate this task protocol?")) {
         let tasks = JSON.parse(localStorage.getItem(getStorageKey())) || [];
+        
+        // Optional: If deleting a completed task, should we revoke points? 
+        // Usually safer not to, to avoid frustration, but technically accurate to do so.
+        // For now, we just delete.
+        
         tasks = tasks.filter(t => t.id !== id);
         saveTasks(tasks);
         renderTasks();
@@ -248,7 +266,7 @@ function checkEmptyState(count) {
     }
 }
 
-// Theme Toggle Logic (Simple Class Toggle)
+// Theme Toggle Logic
 window.setTheme = function(mode) {
     const html = document.documentElement;
     const btnLight = document.getElementById('theme-btn-light');
@@ -262,7 +280,7 @@ window.setTheme = function(mode) {
         localStorage.setItem('auraTheme', 'light');
     }
 
-    // Update Buttons (Bold the active one)
+    // Update Buttons
     if (btnLight && btnDark) {
         if (mode === 'dark') {
             btnDark.classList.add('bg-main', 'text-body', 'border-main');

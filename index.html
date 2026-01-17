@@ -49,14 +49,14 @@
 
     <div id="auth-overlay" class="fixed inset-0 z-[200] flex flex-col items-center justify-center p-6 bg-body transition-all duration-500">
         <div class="w-full max-w-sm animate-fade-in">
-            <div class="mb-12">
-                <h1 class="text-5xl font-extrabold tracking-tighter leading-[0.9] mb-2">
+            <div class="mb-8 text-center">
+                <h1 class="text-3xl font-extrabold tracking-tighter leading-tight mb-2">
                     S1N<br>PRODUCTIVE.
                 </h1>
-                <p class="text-muted font-medium text-lg mt-4">Focus. Execute. Repeat.</p>
             </div>
+            
             <div class="auth-card p-8">
-                <h2 id="auth-title" class="text-2xl font-bold mb-6 tracking-tight">Enter Workspace</h2>
+                <h2 id="auth-title" class="text-xl font-bold mb-6 tracking-tight">Enter Workspace</h2>
                 <form onsubmit="handleAuth(event)" class="space-y-4">
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-bold text-muted uppercase tracking-widest">Username</label>
@@ -78,7 +78,8 @@
                     </p>
                 </div>
             </div>
-            <div class="mt-12 text-center">
+            <div class="mt-12 text-center space-y-2">
+                 <p class="text-[10px] font-bold text-muted uppercase tracking-[0.2em]">Focus. Execute. Repeat.</p>
                  <p class="text-[10px] font-bold text-muted uppercase tracking-[0.2em]">S1N Design System</p>
             </div>
         </div>
@@ -110,6 +111,7 @@
                 <div class="h-px flex-1 bg-border"></div> 
             </div>
         </header>
+
         <div class="px-6 flex-1 w-full relative">
             
             <section id="view-tasks" class="view-section animate-fade-in">
