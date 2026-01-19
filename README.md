@@ -95,9 +95,6 @@ S1N Productive uses a strict **Industrial Monochrome** theme.
 4.  Push to the Branch (`git push origin feature/NewProtocol`).
 5.  Open a Pull Request.
 
-## Made by 
-
-Patel rudra & Pingale kavan
 ---
 
 *System Status: ALL SYSTEMS OPERATIONAL.*
