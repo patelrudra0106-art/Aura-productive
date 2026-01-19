@@ -406,6 +406,7 @@
     
     <script>
         lucide.createIcons();
+        
         function switchView(viewName) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.nav-item').forEach(el => {
@@ -415,10 +416,21 @@
             if(target) target.classList.remove('hidden');
             const nav = document.getElementById('nav-' + viewName);
             if(nav && viewName !== 'admin') nav.classList.replace('opacity-50', 'opacity-100');
+            
+            // Trigger specific view loaders
             if(viewName === 'contest' && window.loadContestData) window.loadContestData();
             if(viewName === 'reports' && window.initReports) window.initReports();
             if(viewName === 'admin' && window.loadAdminPanel) window.loadAdminPanel();
             if(viewName === 'shop' && window.loadShop) window.loadShop(); 
+        }
+
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed', err));
+            });
         }
     </script>
 </body>
