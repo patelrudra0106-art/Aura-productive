@@ -72,6 +72,21 @@ function addTask() {
 
     const tasks = JSON.parse(localStorage.getItem(getStorageKey())) || [];
     
+    // --- DAILY LIMIT CHECK ---
+    const todayStr = new Date().toDateString(); // e.g. "Mon Jan 19 2026"
+    
+    // Count how many tasks were created today
+    const tasksToday = tasks.filter(t => {
+        const taskDate = new Date(t.createdAt).toDateString();
+        return taskDate === todayStr;
+    }).length;
+
+    if (tasksToday >= 5) {
+        alert("Daily Protocol Limit Reached (5/5).\nFocus on current objectives.");
+        return; // STOP execution
+    }
+    // -------------------------
+    
     const newTask = {
         id: Date.now(),
         text: text,
@@ -94,7 +109,7 @@ function addTask() {
     renderTasks();
     
     // Notification
-    if(window.showNotification) window.showNotification("Protocol Initiated", "Task added to queue.", "info");
+    if(window.showNotification) window.showNotification("Protocol Initiated", `Task ${tasksToday + 1}/5 added.`, "info");
 }
 
 function toggleTask(id) {
@@ -105,9 +120,18 @@ function toggleTask(id) {
         // Toggle State
         tasks[taskIndex].completed = !tasks[taskIndex].completed;
         
+        // --- ACHIEVEMENT DATA SYNC ---
+        const user = JSON.parse(localStorage.getItem('auraUser'));
+        
         if (tasks[taskIndex].completed) {
             // --- MARKING AS DONE ---
             tasks[taskIndex].completedAt = Date.now();
+            
+            // Update Stats
+            if (user) {
+                user.totalTasks = (user.totalTasks || 0) + 1;
+                localStorage.setItem('auraUser', JSON.stringify(user));
+            }
             
             // Audio & Confetti
             const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3'); 
@@ -126,11 +150,9 @@ function toggleTask(id) {
             let reason = "Task Complete";
 
             if (tasks[taskIndex].date) {
-                // Construct deadline date object
                 const dueString = tasks[taskIndex].date + (tasks[taskIndex].time ? 'T' + tasks[taskIndex].time : 'T23:59:59');
                 const dueDate = new Date(dueString);
                 
-                // Compare current time with deadline
                 if (new Date() > dueDate) {
                     points = -50; // Late Penalty
                     reason = "Late Penalty";
@@ -148,9 +170,13 @@ function toggleTask(id) {
             // --- MARKING AS UNDONE ---
             tasks[taskIndex].completedAt = null;
             
+            // Revert Stats
+            if (user && user.totalTasks > 0) {
+                user.totalTasks -= 1;
+                localStorage.setItem('auraUser', JSON.stringify(user));
+            }
+
             // 4. RETRIEVE EXACT POINTS TO REVERSE
-            // If we earned -50 (late), this calculates -(-50) which adds 50 back.
-            // If we earned 20, this calculates -(20) which removes 20.
             const pointsToRevert = tasks[taskIndex].earnedPoints || 0;
             
             if(window.addPoints && pointsToRevert !== 0) {
@@ -169,11 +195,6 @@ function toggleTask(id) {
 function deleteTask(id) {
     if(confirm("Terminate this task protocol?")) {
         let tasks = JSON.parse(localStorage.getItem(getStorageKey())) || [];
-        
-        // Optional: If deleting a completed task, should we revoke points? 
-        // Usually safer not to, to avoid frustration, but technically accurate to do so.
-        // For now, we just delete.
-        
         tasks = tasks.filter(t => t.id !== id);
         saveTasks(tasks);
         renderTasks();
@@ -215,7 +236,7 @@ function renderTasks() {
         const li = document.createElement('li');
         li.id = `task-${task.id}`;
         
-        // Style: Clean Card, no colors, just opacity change for completed
+        // Style: Clean Card
         li.className = `card-s1n group p-4 flex items-center gap-4 transition-all duration-300 animate-slide-in ${task.completed ? 'opacity-50 grayscale' : 'hover:border-main'}`;
         
         li.innerHTML = `

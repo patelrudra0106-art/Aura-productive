@@ -1,4 +1,4 @@
-/* auth.js - S1N Industrial Theme Update */
+/* auth.js - S1N Industrial Theme Update (Fixed Achievement Sync) */
 
 // --- STATE ---
 let currentUser = JSON.parse(localStorage.getItem('auraUser')) || null;
@@ -28,6 +28,11 @@ document.addEventListener('DOMContentLoaded', () => {
         checkAdminAccess();
         listenToStats(); 
         listenForBroadcasts(); 
+        
+        // Init Chat Notifications
+        setTimeout(() => {
+            if(window.initChatNotifications) window.initChatNotifications();
+        }, 1000);
     } else {
         // User needs to login
         if (authOverlay) authOverlay.classList.remove('hidden');
@@ -346,6 +351,7 @@ window.handleAuth = async function(e) {
                 streak: 0,
                 friends: [], 
                 inventory: [],
+                unlockedAchievements: [],
                 isBanned: false,
                 joinDate: new Date().toLocaleDateString(),
                 lastActiveMonth: new Date().toISOString().slice(0, 7)
@@ -376,6 +382,9 @@ function loginUser(user) {
     
     authOverlay.classList.add('hidden');
     mainApp.classList.remove('hidden');
+    
+    if(window.initChatNotifications) window.initChatNotifications();
+
     window.location.reload(); 
 }
 
@@ -387,9 +396,10 @@ window.syncUserToDB = function(newPoints, newStreak, monthlyPoints, lastActiveMo
     const taskKey = `auraTasks_${currentUser.name}`;
     const tasks = JSON.parse(localStorage.getItem(taskKey)) || [];
     
-    // FETCH LOCAL INVENTORY TO ENSURE SYNC
+    // FETCH LOCAL DATA TO ENSURE SYNC
     const userLocal = JSON.parse(localStorage.getItem('auraUser')) || {};
     const inventory = userLocal.inventory || [];
+    const unlockedAchievements = userLocal.unlockedAchievements || []; // FIX: Include Achievements in Push
     
     let completedTasks = 0;
     let onTime = 0;
@@ -427,6 +437,7 @@ window.syncUserToDB = function(newPoints, newStreak, monthlyPoints, lastActiveMo
         monthlyPoints: monthlyPoints,
         lastActiveMonth: lastActiveMonth,
         inventory: inventory, 
+        unlockedAchievements: unlockedAchievements, // FIX: Push to DB
         totalMinutes: stats.minutes,
         totalSessions: stats.sessions || 0,
         totalTasks: completedTasks,
@@ -445,18 +456,31 @@ function listenToStats() {
                  window.location.reload();
              }
 
-             // Handle Background Sync
+             // FIX: Read FRESH data from LocalStorage to prevent overwriting achievements with stale 'currentUser' variable
+             let localUser = JSON.parse(localStorage.getItem('auraUser')) || currentUser;
              let needsSave = false;
+
+             // Background Sync Checks
              if(data.friends) {
-                 currentUser.friends = data.friends;
+                 localUser.friends = data.friends;
                  needsSave = true;
              }
              if(data.inventory) { 
-                 currentUser.inventory = data.inventory;
+                 localUser.inventory = data.inventory;
                  needsSave = true;
              }
-             if(needsSave) localStorage.setItem('auraUser', JSON.stringify(currentUser));
+             // FIX: Sync Achievements from Cloud if they exist there
+             if(data.unlockedAchievements) {
+                 localUser.unlockedAchievements = data.unlockedAchievements;
+                 needsSave = true;
+             }
 
+             if(needsSave) {
+                 localStorage.setItem('auraUser', JSON.stringify(localUser));
+                 currentUser = localUser; // Update global reference
+             }
+
+             // Sync Profile Display Stats
              let profile = JSON.parse(localStorage.getItem('auraProfile')) || {};
              if(data.points !== profile.points) {
                  profile.points = data.points;

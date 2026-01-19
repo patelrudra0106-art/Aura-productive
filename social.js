@@ -96,7 +96,7 @@ window.removeFriend = function(targetName) {
     }
 };
 
-// --- VIEW PROFILE (S1N Modal Style) ---
+// --- VIEW PROFILE (Updated with Chat Button) ---
 window.viewFriendProfile = function(targetName) {
     const modal = document.getElementById('friend-modal');
     const content = document.getElementById('friend-modal-content');
@@ -125,7 +125,6 @@ window.viewFriendProfile = function(targetName) {
         let badgesHtml = '';
         if (inventory.length > 0) {
             badgesHtml = `<div class="flex flex-wrap gap-2 justify-center mb-6 pt-4 border-t border-border">`;
-            // Simplified badge icons for S1N theme
             const badgeMap = {
                 'badge_crown': 'crown', 'badge_star': 'star', 'badge_fire': 'flame', 
                 'badge_zap': 'zap', 'theme_emerald': 'leaf'
@@ -182,7 +181,16 @@ window.viewFriendProfile = function(targetName) {
             ${badgesHtml}
 
             ${isFriend ? 
-                `<button onclick="removeFriend('${user.name}')" class="w-full py-3 border border-rose-200 text-rose-500 font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-rose-50 dark:hover:bg-rose-900/10 transition-colors">Disconnect</button>` 
+                `
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="openChat('${user.name}')" class="btn-s1n w-full py-3 text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+                        <i data-lucide="message-circle" class="w-4 h-4"></i> Message
+                    </button>
+                    <button onclick="removeFriend('${user.name}')" class="w-full py-3 border border-rose-200 text-rose-500 font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-rose-50 dark:hover:bg-rose-900/10 transition-colors">
+                        Disconnect
+                    </button>
+                </div>
+                ` 
                 : 
                 `<button onclick="addFriend('${user.name}'); document.getElementById('friend-modal').classList.add('hidden')" class="btn-s1n w-full py-3 text-xs uppercase tracking-wider">Connect</button>`
             }
@@ -193,11 +201,6 @@ window.viewFriendProfile = function(targetName) {
 
 // --- LEAGUE HEADER (Minimal Strip) ---
 function renderLeagueHeader() {
-    // S1N Theme removes the colorful "Season Ends Soon" banner 
-    // and replaces it with a simple text indicator if needed.
-    // For this theme, we'll keep it very subtle.
-    
-    // We check if we need to insert it
     const container = document.getElementById('view-contest');
     let header = document.getElementById('league-header');
     
@@ -270,14 +273,10 @@ function renderLeaderboard(filter = '') {
             const monthlyPoints = u.monthlyPoints || 0;
 
             if (socialViewMode === 'league') {
-                // FIXED LOGIC: Clamp monthly points to Total points.
-                // If database has bad data (monthly > total), we clamp it here so it looks correct.
                 let effectiveMonthly = (userLastMonth === currentMonthStr) ? monthlyPoints : 0;
-                
                 if (effectiveMonthly > totalPoints) {
                     effectiveMonthly = totalPoints; 
                 }
-                
                 score = effectiveMonthly;
             } else {
                 score = totalPoints; 
@@ -309,7 +308,7 @@ function renderLeaderboard(filter = '') {
             const isFriend = myUser && myUser.friends && myUser.friends.includes(user.name);
             const rank = index + 1;
             
-            // Rank Badge (Using new CSS classes)
+            // Rank Badge
             let rankHtml = `<span class="text-muted font-bold text-sm w-8 text-center font-mono">#${rank}</span>`;
             if (rank === 1) rankHtml = `<div class="rank-badge rank-1">1</div>`;
             else if (rank === 2) rankHtml = `<div class="rank-badge rank-2">2</div>`;
@@ -328,7 +327,6 @@ function renderLeaderboard(filter = '') {
             }
 
             const li = document.createElement('div');
-            // S1N Style: No background colors for "Me", just a bold border or specific styling
             const borderClass = (isMe) ? 'border-main' : 'border-border';
             
             li.className = `user-row flex items-center justify-between p-4 rounded-xl border mb-2 transition-all animate-slide-in ${borderClass} hover:border-muted`;

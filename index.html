@@ -26,6 +26,7 @@
                         'fade-in': 'fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                         'slide-in': 'slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                         'pop': 'pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+                        'slide-in-top': 'slideInTop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                     }
                 }
             }
@@ -144,6 +145,22 @@
                         <button onclick="clearFocusTask()" class="p-1 hover:text-rose-500"><i data-lucide="x" class="w-4 h-4"></i></button>
                     </div>
                 </div>
+
+                <div class="mb-6 w-full max-w-[200px]">
+                    <div class="relative">
+                        <i data-lucide="music" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted z-10"></i>
+                        <select id="sound-selector" class="input-s1n pl-9 py-2 text-xs font-bold uppercase tracking-wider cursor-pointer bg-card hover:border-main appearance-none">
+                            <option value="none">Silent Mode</option>
+                            <option value="rain">Heavy Rain</option>
+                            <option value="forest">Night Forest</option>
+                            <option value="white">White Noise</option>
+                            <option value="waves">Ocean Waves</option>
+                            <option value="cafe">Coffee Shop</option>
+                        </select>
+                        <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none"></i>
+                    </div>
+                </div>
+
                 <div class="card-s1n p-8 w-full flex flex-col items-center relative overflow-hidden mb-6">
                     <div class="relative w-64 h-64 mb-8">
                         <svg class="w-full h-full transform -rotate-90">
@@ -238,7 +255,7 @@
     </div>
 
     <div id="account-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm">
-        <div class="card-s1n w-full max-w-sm p-6 relative animate-pop">
+        <div class="card-s1n w-full max-w-sm p-6 relative animate-pop h-[80vh] overflow-y-auto scrollbar-hide">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-xl font-bold tracking-tight">Identity</h3>
                 <button onclick="closeAccount()"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -256,6 +273,8 @@
             </div>
 
             <div id="profile-badges"></div>
+            
+            <div id="profile-achievements" class="mb-4"></div>
 
             <div class="p-3 bg-input rounded-xl mb-4 text-center">
                  <p class="text-[10px] uppercase font-bold text-muted mb-1">Agent Name</p>
@@ -312,6 +331,37 @@
         <div id="friend-modal-content" class="card-s1n w-full max-w-sm p-6 relative animate-pop"></div>
     </div>
 
+    <div id="chat-modal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm">
+        <div class="card-s1n w-full max-w-sm h-[500px] flex flex-col relative animate-pop shadow-2xl">
+            <div class="p-4 border-b border-border flex justify-between items-center bg-card rounded-t-2xl">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-input border border-border flex items-center justify-center">
+                        <i data-lucide="message-square" class="w-4 h-4 text-main"></i>
+                    </div>
+                    <div>
+                        <h3 id="chat-title" class="font-bold text-main leading-none">User</h3>
+                        <p class="text-[10px] text-muted uppercase tracking-wider mt-1">Encrypted Connection</p>
+                    </div>
+                </div>
+                <button onclick="closeChat()" class="text-muted hover:text-rose-500 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-2 bg-body/50 scrollbar-hide">
+                </div>
+
+            <div class="p-3 border-t border-border bg-card rounded-b-2xl">
+                <div class="flex gap-2">
+                    <input type="text" id="chat-input" placeholder="Transmit message..." class="input-s1n py-3 text-sm" autocomplete="off">
+                    <button onclick="sendChatMessage()" class="btn-s1n px-4 flex items-center justify-center">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="notification-history-modal" class="hidden fixed inset-0 z-[150] flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm">
         <div class="card-s1n w-full max-w-sm h-[60vh] flex flex-col p-6 animate-pop">
             <div class="flex justify-between items-center mb-4">
@@ -345,7 +395,9 @@
     
     <script src="auth.js"></script>
     <script src="social.js"></script>
+    <script src="chat.js"></script>
     <script src="notifications.js"></script>
+    <script src="achievements.js"></script> 
     <script src="profile.js"></script>
     <script src="shop.js"></script> 
     <script src="app.js"></script>

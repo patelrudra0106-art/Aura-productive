@@ -1,4 +1,4 @@
-/* pomodoro.js - S1N Industrial Theme Update */
+/* pomodoro.js - S1N Industrial Theme Update + Natural Sounds */
 
 // --- POMODORO CONFIG ---
 let settings = JSON.parse(localStorage.getItem('auraTimerSettings')) || {
@@ -12,6 +12,17 @@ let MODES = {
     short: { time: settings.short * 60, label: 'SHORT RECHARGE' },
     long: { time: settings.long * 60, label: 'LONG RECHARGE' }
 };
+
+// --- SOUNDS ---
+const SOUND_URLS = {
+    rain: 'https://assets.mixkit.co/active_storage/sfx/1167/1167-preview.mp3', // Rain
+    forest: 'https://assets.mixkit.co/active_storage/sfx/2443/2443-preview.mp3', // Crickets/Night
+    white: 'https://assets.mixkit.co/active_storage/sfx/2034/2034-preview.mp3', // White Noise
+    waves: 'https://assets.mixkit.co/active_storage/sfx/1162/1162-preview.mp3', // Waves
+    cafe: 'https://assets.mixkit.co/active_storage/sfx/2645/2645-preview.mp3' // Cafe Ambience
+};
+let ambientAudio = new Audio();
+ambientAudio.loop = true;
 
 // --- STATE ---
 let timeLeft = MODES.work.time;
@@ -28,6 +39,7 @@ const timerStatus = document.getElementById('timer-status');
 const toggleBtn = document.getElementById('timer-toggle');
 const resetBtn = document.getElementById('timer-reset');
 const progressRing = document.getElementById('progress-ring');
+const soundSelector = document.getElementById('sound-selector');
 const modeBtns = {
     work: document.getElementById('mode-work'),
     short: document.getElementById('mode-short'),
@@ -37,7 +49,6 @@ const activeTaskDisplay = document.getElementById('active-task-display');
 const focusTaskText = document.getElementById('focus-task-text');
 
 // --- CONSTANTS ---
-// Based on the SVG in index.html (r=118)
 const CIRCLE_RADIUS = 118;
 const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS;
 
@@ -47,6 +58,29 @@ function initPomodoro() {
         progressRing.style.strokeDasharray = `${CIRCLE_CIRCUMFERENCE} ${CIRCLE_CIRCUMFERENCE}`;
         progressRing.style.strokeDashoffset = 0;
     }
+    
+    // Load saved sound preference
+    const savedSound = localStorage.getItem('auraSoundPref');
+    if(savedSound && soundSelector) {
+        soundSelector.value = savedSound;
+    }
+
+    // Listen for sound changes
+    if(soundSelector) {
+        soundSelector.addEventListener('change', () => {
+            const val = soundSelector.value;
+            localStorage.setItem('auraSoundPref', val);
+            
+            // If running, switch track immediately
+            if(isRunning && val !== 'none') {
+                ambientAudio.src = SOUND_URLS[val];
+                ambientAudio.play().catch(()=>{});
+            } else if (val === 'none') {
+                ambientAudio.pause();
+            }
+        });
+    }
+
     updateDisplay();
     renderHistory(); 
     setupModeListeners();
@@ -60,7 +94,6 @@ function updateDisplay() {
     const s = (timeLeft % 60).toString().padStart(2, '0');
     timerDisplay.textContent = `${m}:${s}`;
     
-    // Ring Progress
     if(progressRing) {
         const totalTime = MODES[currentMode].time;
         const offset = CIRCLE_CIRCUMFERENCE - (timeLeft / totalTime) * CIRCLE_CIRCUMFERENCE;
@@ -74,6 +107,14 @@ function startTimer() {
     if (isRunning) return;
     isRunning = true;
     
+    // START AUDIO
+    const sound = soundSelector ? soundSelector.value : 'none';
+    if(sound !== 'none' && SOUND_URLS[sound]) {
+        ambientAudio.src = SOUND_URLS[sound];
+        ambientAudio.volume = 0.5; // 50% Volume
+        ambientAudio.play().catch(e => console.log("Audio Blocked", e));
+    }
+
     toggleBtn.innerHTML = '<i data-lucide="pause" class="w-5 h-5 fill-current"></i> Pause';
     toggleBtn.classList.add('opacity-90'); 
     
@@ -94,6 +135,9 @@ function startTimer() {
 function pauseTimer() {
     isRunning = false;
     clearInterval(timerInterval);
+    
+    // STOP AUDIO
+    ambientAudio.pause();
     
     toggleBtn.innerHTML = '<i data-lucide="play" class="w-5 h-5 fill-current"></i> Start';
     toggleBtn.classList.remove('opacity-90');
@@ -120,11 +164,6 @@ function completeTimer() {
 
     if(currentMode === 'work') {
         const minutes = MODES.work.time / 60;
-        
-        // --- LOOPHOLE FIX: DYNAMIC POINTS ---
-        // Give 2 points per minute. 
-        // 25 mins = 50 points. 1 min = 2 points.
-        // This prevents users setting 1 min timer to get 50 points.
         const earnedPoints = Math.floor(minutes * 2);
         
         if (window.showNotification) {
@@ -134,6 +173,9 @@ function completeTimer() {
         if(window.addPoints) window.addPoints(earnedPoints, "Focus Session");
         
         saveStats(minutes);
+        
+        if(window.checkAchievements) window.checkAchievements();
+        
         addToHistory(minutes, currentFocusTask || 'Focus Session');
     } else {
         if (window.showNotification) {
@@ -195,6 +237,13 @@ function saveStats(minutesToAdd) {
     stats.sessions += 1;
     stats.minutes += minutesToAdd;
     localStorage.setItem('auraStats', JSON.stringify(stats));
+    
+    const user = JSON.parse(localStorage.getItem('auraUser'));
+    if(user) {
+        user.totalSessions = stats.sessions;
+        user.totalMinutes = stats.minutes;
+        localStorage.setItem('auraUser', JSON.stringify(user));
+    }
 }
 
 function addToHistory(duration, label) {

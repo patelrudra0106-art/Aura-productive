@@ -48,6 +48,10 @@ window.addPoints = function(amount, reason) {
     userProfile.monthlyPoints = (userProfile.monthlyPoints || 0) + amount;
 
     saveProfile();
+    
+    // --- TRIGGER ACHIEVEMENT CHECK ---
+    if(window.checkAchievements) window.checkAchievements();
+    
     updateProfileUI();
     
     if(window.syncUserToDB) window.syncUserToDB(userProfile.points, userProfile.streak, userProfile.monthlyPoints, userProfile.lastActiveMonth);
@@ -71,6 +75,10 @@ window.updateStreak = function() {
 
     userProfile.lastTaskDate = today;
     saveProfile();
+    
+    // --- TRIGGER ACHIEVEMENT CHECK ---
+    if(window.checkAchievements) window.checkAchievements();
+
     updateProfileUI();
     
     if(window.syncUserToDB) window.syncUserToDB(userProfile.points, userProfile.streak, userProfile.monthlyPoints, userProfile.lastActiveMonth);
@@ -87,6 +95,9 @@ function updateProfileUI() {
     if(profileNameDisplay) profileNameDisplay.textContent = userProfile.name || 'User';
 
     renderProfileBadges();
+    
+    // --- RENDER ACHIEVEMENTS ---
+    if(window.renderAchievementsList) window.renderAchievementsList('profile-achievements');
 }
 
 // --- BADGE RENDERING (Fixed Grid Layout) ---
@@ -118,7 +129,6 @@ function renderProfileBadges() {
 
     badgeContainer.innerHTML = '';
     
-    // Fill with empty slots if needed to maintain grid look, or just render owned
     inventory.forEach(itemId => {
         const icon = badgeMap[itemId] || 'award';
         
