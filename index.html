@@ -373,6 +373,24 @@
         </div>
     </div>
 
+    <div id="onboarding-modal" class="hidden fixed inset-0 z-[250] flex items-center justify-center bg-body transition-all duration-500">
+        <div class="w-full max-w-md h-full md:h-auto md:max-h-[85vh] flex flex-col justify-between p-6 md:p-8 md:border md:border-border md:rounded-3xl md:bg-card md:shadow-2xl relative">
+            
+            <div class="w-full flex justify-end">
+                <button onclick="finishOnboarding()" class="text-[10px] font-bold uppercase text-muted hover:text-main tracking-widest py-2">Skip Intro</button>
+            </div>
+
+            <div id="onboarding-content" class="flex-1 flex items-center justify-center w-full">
+                </div>
+
+            <div class="w-full flex flex-col items-center gap-6 mt-4">
+                <div id="onboarding-dots" class="flex gap-2"></div>
+                <button id="onboarding-btn" onclick="nextSlide()" class="btn-s1n w-full py-4 text-xs uppercase tracking-[0.2em] flex items-center justify-center transition-all">
+                    Next Step
+                </button>
+            </div>
+        </div>
+    </div>
     <audio id="silence" loop><source src="data:audio/mp3;base64,SUQzBAAAAAAAI1RTSV*****" type="audio/mpeg"></audio>
     <audio id="alarm-sound" preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg"></audio>
 
@@ -403,8 +421,7 @@
     <script src="app.js"></script>
     <script src="pomodoro.js"></script>
     <script src="reports.js"></script>
-    
-    <script>
+    <script src="onboarding.js"></script> <script>
         lucide.createIcons();
         
         function switchView(viewName) {

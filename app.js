@@ -1,4 +1,4 @@
-/* app.js - S1N Industrial Theme Update */
+/* S1N Industrial Theme (Colorful Update) */
 
 // --- DOM ELEMENTS ---
 const taskInput = document.getElementById('task-input');
@@ -19,6 +19,19 @@ document.addEventListener('DOMContentLoaded', () => {
     checkEmptyState();
 });
 
+// --- GAMIFICATION ENGINE ---
+window.triggerJuice = function(element, points) {
+    if(!element) return;
+
+    // 1. Flash Effect
+    element.classList.add('flash-success');
+    setTimeout(() => element.classList.remove('flash-success'), 300);
+
+    // 2. Shake Effect
+    element.classList.add('animate-shake');
+    setTimeout(() => element.classList.remove('animate-shake'), 400);
+};
+
 // --- EVENT LISTENERS ---
 function setupEventListeners() {
     // Input Validation
@@ -35,11 +48,9 @@ function setupEventListeners() {
     // Filters
     filterBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            // Reset all buttons to default style
             filterBtns.forEach(b => {
                 b.className = "filter-btn text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-transparent text-muted hover:text-main transition-colors";
             });
-            // Set active button style (Solid Black/White)
             btn.className = "filter-btn active text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-main bg-main text-body transition-colors";
             
             currentFilter = btn.dataset.filter;
@@ -73,9 +84,7 @@ function addTask() {
     const tasks = JSON.parse(localStorage.getItem(getStorageKey())) || [];
     
     // --- DAILY LIMIT CHECK ---
-    const todayStr = new Date().toDateString(); // e.g. "Mon Jan 19 2026"
-    
-    // Count how many tasks were created today
+    const todayStr = new Date().toDateString(); 
     const tasksToday = tasks.filter(t => {
         const taskDate = new Date(t.createdAt).toDateString();
         return taskDate === todayStr;
@@ -83,9 +92,8 @@ function addTask() {
 
     if (tasksToday >= 5) {
         alert("Daily Protocol Limit Reached (5/5).\nFocus on current objectives.");
-        return; // STOP execution
+        return; 
     }
-    // -------------------------
     
     const newTask = {
         id: Date.now(),
@@ -94,13 +102,12 @@ function addTask() {
         date: dateInput.value,
         time: timeInput.value,
         createdAt: new Date().toISOString(),
-        earnedPoints: 0 // Initialize ledger
+        earnedPoints: 0 
     };
 
     tasks.unshift(newTask);
     saveTasks(tasks);
     
-    // Reset Form
     taskInput.value = '';
     dateInput.value = '';
     timeInput.value = '';
@@ -108,7 +115,6 @@ function addTask() {
     
     renderTasks();
     
-    // Notification
     if(window.showNotification) window.showNotification("Protocol Initiated", `Task ${tasksToday + 1}/5 added.`, "info");
 }
 
@@ -117,35 +123,17 @@ function toggleTask(id) {
     const taskIndex = tasks.findIndex(t => t.id === id);
     
     if (taskIndex > -1) {
-        // Toggle State
         tasks[taskIndex].completed = !tasks[taskIndex].completed;
-        
-        // --- ACHIEVEMENT DATA SYNC ---
         const user = JSON.parse(localStorage.getItem('auraUser'));
         
         if (tasks[taskIndex].completed) {
-            // --- MARKING AS DONE ---
             tasks[taskIndex].completedAt = Date.now();
             
-            // Update Stats
             if (user) {
                 user.totalTasks = (user.totalTasks || 0) + 1;
                 localStorage.setItem('auraUser', JSON.stringify(user));
             }
             
-            // Audio & Confetti
-            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3'); 
-            audio.volume = 0.2;
-            audio.play().catch(()=>{});
-
-            if(window.confetti) {
-                const rect = document.getElementById(`task-${id}`).getBoundingClientRect();
-                const x = rect.left / window.innerWidth + (rect.width / window.innerWidth) / 2;
-                const y = rect.top / window.innerHeight;
-                confetti({ particleCount: 40, spread: 40, origin: { x, y }, colors: ['#000000', '#FFFFFF', '#9CA3AF'] });
-            }
-
-            // 1. CALCULATE POINTS
             let points = 20; 
             let reason = "Task Complete";
 
@@ -154,36 +142,53 @@ function toggleTask(id) {
                 const dueDate = new Date(dueString);
                 
                 if (new Date() > dueDate) {
-                    points = -50; // Late Penalty
+                    points = -50; 
                     reason = "Late Penalty";
                 }
             }
+            
+            // --- JUICE: COLORFUL CONFETTI ---
+            const taskEl = document.getElementById(`task-${id}`);
+            
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3'); 
+            audio.volume = 0.2;
+            audio.play().catch(()=>{});
 
-            // 2. SAVE THE POINTS TO THE TASK (The Ledger)
+            if(window.confetti && taskEl) {
+                const rect = taskEl.getBoundingClientRect();
+                const x = (rect.left + rect.width / 2) / window.innerWidth;
+                const y = (rect.top + rect.height / 2) / window.innerHeight;
+                
+                // RAINBOW COLORS
+                confetti({ 
+                    particleCount: 60, 
+                    spread: 50, 
+                    origin: { x, y }, 
+                    colors: ['#FF4500', '#FFD700', '#32CD32', '#00BFFF', '#9400D3', '#FF1493'] 
+                });
+            }
+
+            if (taskEl) window.triggerJuice(taskEl, points > 0 ? points : 0);
+
             tasks[taskIndex].earnedPoints = points;
 
-            // 3. EXECUTE UPDATE
             if(window.addPoints) window.addPoints(points, reason);
             if(window.updateStreak && points > 0) window.updateStreak();
 
         } else {
-            // --- MARKING AS UNDONE ---
             tasks[taskIndex].completedAt = null;
             
-            // Revert Stats
             if (user && user.totalTasks > 0) {
                 user.totalTasks -= 1;
                 localStorage.setItem('auraUser', JSON.stringify(user));
             }
 
-            // 4. RETRIEVE EXACT POINTS TO REVERSE
             const pointsToRevert = tasks[taskIndex].earnedPoints || 0;
             
             if(window.addPoints && pointsToRevert !== 0) {
                 window.addPoints(-pointsToRevert, "Task Undone");
             }
             
-            // 5. CLEAR THE LEDGER
             tasks[taskIndex].earnedPoints = 0;
         }
 
@@ -209,24 +214,20 @@ function renderTasks() {
     let visibleCount = 0;
 
     tasks.forEach(task => {
-        // Filter Logic
         if (currentFilter === 'active' && task.completed) return;
         if (currentFilter === 'completed' && !task.completed) return;
 
         visibleCount++;
 
-        // Date Formatting
         let dateDisplay = '';
         if (task.date) {
             const dateObj = new Date(task.date);
             const today = new Date();
             const isToday = dateObj.toDateString() === today.toDateString();
             dateDisplay = isToday ? 'TODAY' : dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }).toUpperCase();
-            
             if (task.time) dateDisplay += ` • ${task.time}`;
         }
 
-        // Check for Overdue
         let isOverdue = false;
         if (!task.completed && task.date) {
             const due = new Date(task.date + (task.time ? 'T' + task.time : 'T23:59:59'));
@@ -236,8 +237,10 @@ function renderTasks() {
         const li = document.createElement('li');
         li.id = `task-${task.id}`;
         
-        // Style: Clean Card
-        li.className = `card-s1n group p-4 flex items-center gap-4 transition-all duration-300 animate-slide-in ${task.completed ? 'opacity-50 grayscale' : 'hover:border-main'}`;
+        const baseClass = "card-s1n group p-4 flex items-center gap-4 transition-all duration-300 animate-slide-in";
+        const stateClass = task.completed ? 'opacity-50 grayscale' : 'hover:border-main';
+        
+        li.className = `${baseClass} ${stateClass}`;
         
         li.innerHTML = `
             <button onclick="toggleTask(${task.id})" class="flex-shrink-0 w-5 h-5 border border-main rounded-sm flex items-center justify-center transition-all ${task.completed ? 'bg-main text-body' : 'bg-transparent hover:bg-input'}">
@@ -287,7 +290,6 @@ function checkEmptyState(count) {
     }
 }
 
-// Theme Toggle Logic
 window.setTheme = function(mode) {
     const html = document.documentElement;
     const btnLight = document.getElementById('theme-btn-light');
@@ -301,25 +303,21 @@ window.setTheme = function(mode) {
         localStorage.setItem('auraTheme', 'light');
     }
 
-    // Update Buttons
     if (btnLight && btnDark) {
         if (mode === 'dark') {
             btnDark.classList.add('bg-main', 'text-body', 'border-main');
             btnDark.classList.remove('text-muted', 'border-transparent');
-            
             btnLight.classList.remove('bg-main', 'text-body', 'border-main');
             btnLight.classList.add('text-muted', 'border-transparent');
         } else {
             btnLight.classList.add('bg-main', 'text-body', 'border-main');
             btnLight.classList.remove('text-muted', 'border-transparent');
-            
             btnDark.classList.remove('bg-main', 'text-body', 'border-main');
             btnDark.classList.add('text-muted', 'border-transparent');
         }
     }
 };
 
-// Init Theme Buttons on Load
 document.addEventListener('DOMContentLoaded', () => {
     const currentTheme = localStorage.getItem('auraTheme') === 'dark' || 
         (!('auraTheme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches) 

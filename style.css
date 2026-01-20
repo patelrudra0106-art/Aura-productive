@@ -1,3 +1,5 @@
+/* S1N Industrial Theme - GAMIFIED UPDATE */
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 /* --- S1N THEME VARIABLES --- */
@@ -5,34 +7,38 @@
     --font-sans: 'Inter', sans-serif;
 
     /* LIGHT MODE (Clean, Industrial Gray) */
-    --bg-body: #F3F4F6;       /* Soft cool gray */
-    --bg-card: #FFFFFF;       /* Pure white cards */
-    --bg-input: #F9FAFB;      /* Very light gray for inputs */
+    --bg-body: #F3F4F6;       
+    --bg-card: #FFFFFF;       
+    --bg-input: #F9FAFB;      
     
-    --text-main: #111827;     /* Almost black */
-    --text-muted: #6B7280;    /* Medium gray */
+    --text-main: #111827;     
+    --text-muted: #6B7280;    
     
-    --border-light: #E5E7EB;  /* Subtle borders */
-    --border-dark: #000000;   /* High contrast borders */
+    --border-light: #E5E7EB;  
+    --border-dark: #000000;   
 
-    --btn-bg: #000000;        /* Black buttons */
-    --btn-text: #FFFFFF;      /* White text */
+    --btn-bg: #000000;        
+    --btn-text: #FFFFFF;      
+    
+    /* GAME COLORS */
+    --color-gold: #F59E0B;
+    --color-xp: #10B981; /* Emerald for XP */
 }
 
 .dark {
     /* DARK MODE (Deep, OLED Black) */
-    --bg-body: #000000;       /* Pure black */
-    --bg-card: #09090b;       /* Zinc-950 (Subtle off-black) */
-    --bg-input: #171717;      /* Darker input background */
+    --bg-body: #000000;       
+    --bg-card: #09090b;       
+    --bg-input: #171717;      
 
-    --text-main: #FFFFFF;     /* Pure white */
-    --text-muted: #A1A1AA;    /* Light gray */
+    --text-main: #FFFFFF;     
+    --text-muted: #A1A1AA;    
 
-    --border-light: #27272a;  /* Dark gray borders */
-    --border-dark: #FFFFFF;   /* White borders for contrast */
+    --border-light: #27272a;  
+    --border-dark: #FFFFFF;   
 
-    --btn-bg: #FFFFFF;        /* White buttons */
-    --btn-text: #000000;      /* Black text */
+    --btn-bg: #FFFFFF;        
+    --btn-text: #000000;      
 }
 
 /* --- BASE STYLES --- */
@@ -41,30 +47,31 @@ body {
     color: var(--text-main);
     font-family: var(--font-sans);
     transition: background-color 0.3s ease, color 0.3s ease;
-    -webkit-font-smoothing: antialiased; /* Crisp text */
+    -webkit-font-smoothing: antialiased; 
 }
 
 /* Utilities */
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Browser Fixes */
 .dark ::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.6; cursor: pointer; }
 :focus-visible { outline: none; }
 
-/* --- S1N COMPONENT CLASSES (Reusable) --- */
+/* --- S1N COMPONENT CLASSES --- */
 
-/* 1. The Pill Button (High Contrast) */
+/* 1. Pill Button */
 .btn-s1n {
     background-color: var(--btn-bg);
     color: var(--btn-text);
-    border-radius: 9999px; /* Full Pill */
+    border-radius: 9999px; 
     padding: 12px 24px;
     font-weight: 700;
     font-size: 0.875rem;
     border: 1px solid transparent;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
 }
 .btn-s1n:hover {
     transform: translateY(-1px);
@@ -72,7 +79,7 @@ body {
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 .btn-s1n:active {
-    transform: scale(0.98);
+    transform: scale(0.95);
 }
 .btn-s1n:disabled {
     opacity: 0.5;
@@ -80,16 +87,16 @@ body {
     transform: none;
 }
 
-/* 2. The Bordered Card (No Shadows, Just Clean Lines) */
+/* 2. Bordered Card */
 .card-s1n {
     background-color: var(--bg-card);
     border: 1px solid var(--border-light);
     border-radius: 16px;
-    /* S1N style relies on borders, not shadows */
     box-shadow: none; 
+    transition: transform 0.2s, border-color 0.2s;
 }
 
-/* 3. The Input Field (Flat & Clean) */
+/* 3. Input Field */
 .input-s1n {
     background-color: var(--bg-input);
     border: 1px solid var(--border-light);
@@ -101,10 +108,10 @@ body {
     transition: border-color 0.2s;
 }
 .input-s1n:focus {
-    border-color: var(--text-muted); /* Darker gray on focus */
+    border-color: var(--text-muted); 
 }
 
-/* --- ANIMATIONS --- */
+/* --- STANDARD ANIMATIONS --- */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -129,15 +136,12 @@ body {
 }
 .animate-slide-in-top { animation: slideInTop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-/* --- AUTH STYLES (Updated for S1N) --- */
-#auth-overlay {
-    background-color: var(--bg-body);
-}
-
+/* --- AUTH STYLES --- */
+#auth-overlay { background-color: var(--bg-body); }
 .auth-card {
     background-color: var(--bg-card);
     border: 1px solid var(--border-light);
-    box-shadow: none; /* Removed heavy shadow */
+    box-shadow: none;
     border-radius: 24px;
 }
 
@@ -158,11 +162,63 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%; /* Circle */
+    border-radius: 50%;
     font-size: 11px;
     font-weight: 800;
 }
-/* Updated Rank Colors to be less neon, more matte */
-.rank-1 { background: #FCD34D; color: #78350F; } /* Matte Gold */
-.rank-2 { background: #E5E7EB; color: #374151; } /* Matte Silver */
-.rank-3 { background: #FDBA74; color: #9A3412; } /* Matte Bronze */
+.rank-1 { background: #FCD34D; color: #78350F; } 
+.rank-2 { background: #E5E7EB; color: #374151; } 
+.rank-3 { background: #FDBA74; color: #9A3412; } 
+
+/* =========================================
+   GAMIFICATION "JUICE" EXTENSIONS
+   ========================================= */
+
+/* 1. XP Floating Text */
+@keyframes floatUp {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    50% { transform: translateY(-20px) scale(1.2); opacity: 1; }
+    100% { transform: translateY(-50px) scale(1); opacity: 0; }
+}
+
+.xp-popup {
+    position: fixed;
+    pointer-events: none; /* Let clicks pass through */
+    font-family: monospace;
+    font-weight: 900;
+    font-size: 1.2rem;
+    color: var(--text-main);
+    z-index: 9999;
+    animation: floatUp 1.2s ease-out forwards;
+    text-shadow: 2px 2px 0px var(--bg-body);
+}
+
+/* 2. Impact Shake */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-3px) rotate(-2deg); }
+    40% { transform: translateX(3px) rotate(2deg); }
+    60% { transform: translateX(-2px); }
+    80% { transform: translateX(2px); }
+}
+
+.animate-shake {
+    animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+/* 3. Success Flash */
+@keyframes flashWhite {
+    0% { background-color: var(--bg-card); }
+    50% { background-color: var(--text-main); color: var(--bg-body); border-color: var(--text-main); }
+    100% { background-color: var(--bg-card); }
+}
+
+.flash-success {
+    animation: flashWhite 0.3s ease-out;
+}
+
+/* 4. Achievement Modal Overlay */
+.achievement-overlay {
+    background: radial-gradient(circle, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.95) 100%);
+    backdrop-filter: blur(5px);
+}

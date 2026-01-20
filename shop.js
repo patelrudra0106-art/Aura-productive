@@ -1,7 +1,6 @@
-/* shop.js - S1N Industrial Theme Update */
+/* S1N Industrial Theme (Colorful Update) */
 
 // --- CATALOG CONFIG ---
-// We use window.SHOP_ITEMS to prevent errors if the script loads twice
 window.SHOP_ITEMS = [
     {
         id: 'badge_crown',
@@ -35,7 +34,6 @@ window.SHOP_ITEMS = [
         icon: 'zap',
         description: 'High efficiency rating.',
     },
-    // --- NEW ITEM: STREAK RESTORE ---
     {
         id: 'restore_streak',
         name: 'Streak Restore',
@@ -62,7 +60,6 @@ window.loadShop = function() {
 
     if (!list) return;
     
-    // Update local Points Display in Header
     if (pointsDisplay) {
         pointsDisplay.textContent = user ? (user.points || 0).toLocaleString() : '0';
     }
@@ -74,45 +71,27 @@ window.loadShop = function() {
 function renderShopItems(container, user) {
     container.innerHTML = '';
     
-    // Ensure inventory exists safely
     const inventory = (user && user.inventory) ? user.inventory : [];
     const currentPoints = (user && user.points) ? user.points : 0;
 
     window.SHOP_ITEMS.forEach(item => {
-        // "Owned" logic: Permanent items appear faded/disabled if you have them.
-        // Consumables (like Streak Restore) are never "owned" permanently; you can always buy more.
         const isPermanentAndOwned = (item.type !== 'consumable' && inventory.includes(item.id));
-        
         const canAfford = currentPoints >= item.cost;
 
         const div = document.createElement('div');
-        // S1N Style: Bordered card, no shadow. Opacity change if owned.
+        div.id = `shop-item-${item.id}`;
+        
         div.className = `card-s1n p-5 flex flex-col justify-between transition-all duration-300 ${isPermanentAndOwned ? 'opacity-50' : 'hover:border-main'}`;
         
-        // Button Logic
         let actionBtn = '';
-        
         if (isPermanentAndOwned) {
-            actionBtn = `
-                <button disabled class="w-full py-3 mt-4 border border-border rounded-full text-xs font-bold uppercase tracking-wider text-muted cursor-not-allowed">
-                    Acquired
-                </button>
-            `;
+            actionBtn = `<button disabled class="w-full py-3 mt-4 border border-border rounded-full text-xs font-bold uppercase tracking-wider text-muted cursor-not-allowed">Acquired</button>`;
         } else if (canAfford) {
-            actionBtn = `
-                <button onclick="buyItem('${item.id}')" class="btn-s1n w-full mt-4 text-xs uppercase tracking-wider">
-                    Purchase ${item.cost}
-                </button>
-            `;
+            actionBtn = `<button onclick="buyItem('${item.id}')" class="btn-s1n w-full mt-4 text-xs uppercase tracking-wider">Purchase ${item.cost}</button>`;
         } else {
-            actionBtn = `
-                <button disabled class="w-full py-3 mt-4 border border-border rounded-full text-xs font-bold uppercase tracking-wider text-muted cursor-not-allowed opacity-50">
-                    Need ${item.cost}
-                </button>
-            `;
+            actionBtn = `<button disabled class="w-full py-3 mt-4 border border-border rounded-full text-xs font-bold uppercase tracking-wider text-muted cursor-not-allowed opacity-50">Need ${item.cost}</button>`;
         }
 
-        // Icon Logic: Use item.icon
         div.innerHTML = `
             <div>
                 <div class="flex justify-between items-start mb-4">
@@ -121,7 +100,6 @@ function renderShopItems(container, user) {
                     </div>
                     ${isPermanentAndOwned ? '<i data-lucide="check" class="w-4 h-4 text-muted"></i>' : ''}
                 </div>
-                
                 <h3 class="font-bold text-lg leading-tight tracking-tight text-main uppercase">${item.name}</h3>
                 <p class="text-[10px] text-muted mt-1 uppercase tracking-wider">${item.description}</p>
             </div>
@@ -147,27 +125,18 @@ window.buyItem = async function(itemId) {
 
     if (!confirm(`Confirm purchase of ${item.name} for ${item.cost} credits?`)) return;
 
-    // 1. Deduct Points
     user.points -= item.cost;
     
-    // 2. Handle Item Effects
     if (item.id === 'restore_streak') {
-        // EFFECT: Set lastTaskDate to yesterday to bridge the gap
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         user.lastTaskDate = yesterday.toISOString().split('T')[0];
-        
-        if(window.showNotification) window.showNotification("Streak Repaired", "Timeline bridged. Continue protocol.", "success");
-    } 
-    else {
-        // Normal Items (Badges) go to Inventory
+        if(window.showNotification) window.showNotification("Streak Repaired", "Timeline bridged.", "success");
+    } else {
         if (!user.inventory) user.inventory = [];
-        if (!user.inventory.includes(item.id)) {
-            user.inventory.push(item.id);
-        }
+        if (!user.inventory.includes(item.id)) user.inventory.push(item.id);
     }
 
-    // 3. Update Local Storage (User & Profile)
     let profile = JSON.parse(localStorage.getItem('auraProfile')) || {};
     profile.points = user.points;
     profile.inventory = user.inventory;
@@ -176,17 +145,28 @@ window.buyItem = async function(itemId) {
     localStorage.setItem('auraUser', JSON.stringify(user));
     localStorage.setItem('auraProfile', JSON.stringify(profile));
 
-    // 4. UI Updates
+    // --- COLORFUL JUICE ---
+    const itemCard = document.getElementById(`shop-item-${item.id}`);
+    if(window.triggerJuice && itemCard) {
+        window.triggerJuice(itemCard, 0); 
+    }
+
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'); 
+    audio.volume = 0.3;
+    audio.play().catch(()=>{});
+
+    if(window.confetti) {
+        confetti({ 
+            particleCount: 50, 
+            spread: 60, 
+            origin: { y: 0.7 }, 
+            colors: ['#FF4500', '#FFD700', '#32CD32', '#00BFFF', '#9400D3', '#FF1493'] 
+        });
+    }
+
     window.loadShop(); 
     if(window.updateProfileUI) window.updateProfileUI(); 
-    
-    // 5. Success Effect
-    if (item.id !== 'restore_streak' && window.showNotification) {
-        window.showNotification("Transaction Complete", `${item.name} added.`, "success");
-    }
-    if(window.confetti) confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 }, colors: ['#000000', '#FFFFFF'] });
 
-    // 6. Firebase Sync (Silent)
     try {
         if(window.firebase) {
             await firebase.database().ref('users/' + user.name).update({

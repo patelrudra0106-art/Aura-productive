@@ -1,4 +1,4 @@
-/* pomodoro.js - S1N Industrial Theme Update + Natural Sounds */
+/* S1N Industrial Theme (Colorful Update) */
 
 // --- POMODORO CONFIG ---
 let settings = JSON.parse(localStorage.getItem('auraTimerSettings')) || {
@@ -13,14 +13,8 @@ let MODES = {
     long: { time: settings.long * 60, label: 'LONG RECHARGE' }
 };
 
-// --- SOUNDS ---
-const SOUND_URLS = {
-    rain: 'https://assets.mixkit.co/active_storage/sfx/1167/1167-preview.mp3', // Rain
-    forest: 'https://assets.mixkit.co/active_storage/sfx/2443/2443-preview.mp3', // Crickets/Night
-    white: 'https://assets.mixkit.co/active_storage/sfx/2034/2034-preview.mp3', // White Noise
-    waves: 'https://assets.mixkit.co/active_storage/sfx/1162/1162-preview.mp3', // Waves
-    cafe: 'https://assets.mixkit.co/active_storage/sfx/2645/2645-preview.mp3' // Cafe Ambience
-};
+// --- SOUNDS SYSTEM ---
+let SOUND_URLS = {}; 
 let ambientAudio = new Audio();
 ambientAudio.loop = true;
 
@@ -59,31 +53,77 @@ function initPomodoro() {
         progressRing.style.strokeDashoffset = 0;
     }
     
-    // Load saved sound preference
-    const savedSound = localStorage.getItem('auraSoundPref');
-    if(savedSound && soundSelector) {
-        soundSelector.value = savedSound;
+    updateDisplay();
+    renderHistory(); 
+    setupModeListeners();
+    setupSoundSystem();
+}
+
+// --- SOUND SYSTEM LOGIC ---
+function setupSoundSystem() {
+    if(window.firebase) {
+        firebase.database().ref('system/sounds').on('value', (snapshot) => {
+            refreshSoundDropdown(snapshot.val());
+        });
+    } else {
+        refreshSoundDropdown(null);
     }
 
-    // Listen for sound changes
     if(soundSelector) {
         soundSelector.addEventListener('change', () => {
             const val = soundSelector.value;
             localStorage.setItem('auraSoundPref', val);
-            
-            // If running, switch track immediately
-            if(isRunning && val !== 'none') {
-                ambientAudio.src = SOUND_URLS[val];
-                ambientAudio.play().catch(()=>{});
-            } else if (val === 'none') {
-                ambientAudio.pause();
-            }
+            if(isRunning && val !== 'none') playAudio(val);
+            else if (val === 'none') ambientAudio.pause();
         });
     }
+}
 
-    updateDisplay();
-    renderHistory(); 
-    setupModeListeners();
+function refreshSoundDropdown(customSounds) {
+    if (!soundSelector) return;
+    const savedPref = localStorage.getItem('auraSoundPref') || 'none';
+    
+    soundSelector.innerHTML = '';
+    SOUND_URLS = {}; 
+
+    const silentOpt = document.createElement('option');
+    silentOpt.value = 'none';
+    silentOpt.textContent = 'Silent Mode';
+    soundSelector.appendChild(silentOpt);
+
+    if (customSounds) {
+        const groupCustom = document.createElement('optgroup');
+        groupCustom.label = "Active Protocols";
+        Object.values(customSounds).forEach(sound => {
+            const id = `custom_${sound.name.replace(/\s+/g, '_')}`;
+            SOUND_URLS[id] = sound.url;
+            const opt = document.createElement('option');
+            opt.value = id;
+            opt.textContent = sound.name;
+            groupCustom.appendChild(opt);
+        });
+        soundSelector.appendChild(groupCustom);
+    }
+
+    if (SOUND_URLS[savedPref] || savedPref === 'none') {
+        soundSelector.value = savedPref;
+    } else {
+        soundSelector.value = 'none'; 
+        localStorage.setItem('auraSoundPref', 'none');
+        if(isRunning) ambientAudio.pause();
+    }
+}
+
+function playAudio(key) {
+    if (key === 'none' || !SOUND_URLS[key]) {
+        ambientAudio.pause();
+        return;
+    }
+    if (ambientAudio.src !== SOUND_URLS[key]) {
+        ambientAudio.src = SOUND_URLS[key];
+        ambientAudio.volume = 0.5; 
+    }
+    ambientAudio.play().catch(e => console.log("Audio Blocked", e));
 }
 
 // --- CORE FUNCTIONS ---
@@ -107,13 +147,8 @@ function startTimer() {
     if (isRunning) return;
     isRunning = true;
     
-    // START AUDIO
     const sound = soundSelector ? soundSelector.value : 'none';
-    if(sound !== 'none' && SOUND_URLS[sound]) {
-        ambientAudio.src = SOUND_URLS[sound];
-        ambientAudio.volume = 0.5; // 50% Volume
-        ambientAudio.play().catch(e => console.log("Audio Blocked", e));
-    }
+    playAudio(sound);
 
     toggleBtn.innerHTML = '<i data-lucide="pause" class="w-5 h-5 fill-current"></i> Pause';
     toggleBtn.classList.add('opacity-90'); 
@@ -135,8 +170,6 @@ function startTimer() {
 function pauseTimer() {
     isRunning = false;
     clearInterval(timerInterval);
-    
-    // STOP AUDIO
     ambientAudio.pause();
     
     toggleBtn.innerHTML = '<i data-lucide="play" class="w-5 h-5 fill-current"></i> Start';
@@ -157,15 +190,29 @@ function resetTimer() {
 
 function completeTimer() {
     pauseTimer();
-    if(window.confetti) confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#000000', '#FFFFFF'] });
+    
+    // --- GAMIFICATION: COLORFUL CONFETTI ---
+    if(window.confetti) {
+        confetti({ 
+            particleCount: 150, 
+            spread: 100, 
+            origin: { y: 0.6 }, 
+            colors: ['#FF4500', '#FFD700', '#32CD32', '#00BFFF', '#9400D3', '#FF1493'] 
+        });
+    }
     
     const alarm = document.getElementById('alarm-sound');
     if(alarm) alarm.play().catch(()=>{});
 
     if(currentMode === 'work') {
         const minutes = MODES.work.time / 60;
-        const earnedPoints = Math.floor(minutes * 2);
+        const earnedPoints = Math.floor(minutes * 2); 
         
+        if (window.triggerJuice && timerDisplay) {
+            const card = timerDisplay.closest('.card-s1n');
+            window.triggerJuice(card || timerDisplay, earnedPoints);
+        }
+
         if (window.showNotification) {
             window.showNotification("SESSION COMPLETE", `Protocol finished. +${earnedPoints} Credits.`, "success"); 
         }
@@ -186,7 +233,6 @@ function completeTimer() {
     timerStatus.textContent = 'COMPLETE';
 }
 
-// --- SETTINGS MODAL ---
 window.openSettings = function() {
     const modal = document.getElementById('settings-modal');
     if(modal) {
@@ -217,13 +263,11 @@ window.saveSettings = function() {
     closeSettings();
 };
 
-// --- LINKED TASKS ---
 window.setFocusTask = function(taskText) {
     currentFocusTask = taskText;
     if(focusTaskText) focusTaskText.textContent = taskText;
     if(activeTaskDisplay) activeTaskDisplay.classList.remove('hidden');
     if(window.switchView) window.switchView('focus');
-    
     setMode('work');
 };
 
@@ -232,7 +276,6 @@ window.clearFocusTask = function() {
     if(activeTaskDisplay) activeTaskDisplay.classList.add('hidden');
 };
 
-// --- HISTORY & STATS ---
 function saveStats(minutesToAdd) {
     stats.sessions += 1;
     stats.minutes += minutesToAdd;
@@ -262,9 +305,7 @@ function addToHistory(duration, label) {
     renderHistory();
 }
 
-function renderHistory() {
-    // Placeholder for history UI
-}
+function renderHistory() {}
 
 window.clearHistory = function() {
     if(confirm('Purge session logs?')) {
@@ -274,7 +315,6 @@ window.clearHistory = function() {
     }
 }
 
-// --- MODE SWITCHING ---
 function setMode(mode) {
     resetTimer();
     currentMode = mode;
@@ -290,7 +330,6 @@ function setMode(mode) {
             btn.className = "px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-full border border-transparent text-muted hover:border-border transition-colors";
         }
     });
-    
     updateDisplay();
 }
 

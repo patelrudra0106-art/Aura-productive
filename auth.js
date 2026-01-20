@@ -1,4 +1,4 @@
-/* auth.js - S1N Industrial Theme Update (Fixed Achievement Sync) */
+/* auth.js - S1N Industrial Theme Update (Onboarding Linked) */
 
 // --- STATE ---
 let currentUser = JSON.parse(localStorage.getItem('auraUser')) || null;
@@ -110,7 +110,7 @@ window.loadAdminPanel = function(filter = '') {
 
         list.innerHTML = '';
 
-        // --- DASHBOARD UI (S1N Style) ---
+        // --- DASHBOARD UI ---
         const dashboardHTML = `
             <div class="grid grid-cols-3 gap-2 mb-6 animate-fade-in">
                 <div class="card-s1n p-3 text-center">
@@ -127,21 +127,48 @@ window.loadAdminPanel = function(filter = '') {
                 </div>
             </div>
 
-            <div class="mb-6 flex gap-2 animate-fade-in">
-                <input type="text" id="admin-broadcast-input" placeholder="System Alert..." class="input-s1n py-2 text-xs">
-                <button onclick="adminSendBroadcast()" class="btn-s1n px-4 py-2">
-                    <i data-lucide="send" class="w-4 h-4"></i>
-                </button>
+            <div class="mb-6 pb-6 border-b border-border animate-fade-in">
+                <h4 class="text-xs font-bold uppercase text-muted mb-2">Global Alert</h4>
+                <div class="flex gap-2">
+                    <input type="text" id="admin-broadcast-input" placeholder="System Alert..." class="input-s1n py-2 text-xs">
+                    <button onclick="adminSendBroadcast()" class="btn-s1n px-4 py-2">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                    </button>
+                </div>
             </div>
+
+            <div class="mb-6 pb-6 border-b border-border animate-fade-in">
+                <h4 class="text-xs font-bold uppercase text-muted mb-2">Sound Protocol Config</h4>
+                <div class="flex flex-col gap-2 mb-2">
+                    <input type="text" id="sound-name-input" placeholder="Frequency Name (e.g. Rain)" class="input-s1n py-2 text-xs">
+                    
+                    <input type="file" id="sound-file-input" accept="audio/*" class="block w-full text-xs text-muted
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:text-xs file:font-bold file:uppercase
+                        file:bg-main file:text-body
+                        hover:file:opacity-80 cursor-pointer
+                    ">
+                </div>
+                <button id="btn-upload-sound" onclick="adminAddSound()" class="btn-s1n w-full py-2 text-xs uppercase mb-4 tracking-wider">Upload Frequency</button>
+                <div id="admin-sound-list" class="space-y-2">
+                    <p class="text-[10px] text-muted italic">Loading audio protocols...</p>
+                </div>
+            </div>
+
+            <h4 class="text-xs font-bold uppercase text-muted mb-4">User Database</h4>
         `;
         list.insertAdjacentHTML('beforeend', dashboardHTML);
+
+        // Load Sounds
+        loadAdminSounds();
 
         if (users.length === 0) {
             list.insertAdjacentHTML('beforeend', `<div class="text-center py-10 border border-dashed border-border rounded-xl"><p class="text-muted text-xs font-bold uppercase">No records found.</p></div>`);
             return;
         }
 
-        // --- RENDER LIST ---
+        // --- RENDER USER LIST ---
         users.forEach(user => {
             if (!user) return;
 
@@ -149,9 +176,8 @@ window.loadAdminPanel = function(filter = '') {
             const isBanned = user.isBanned === true; 
             const safeName = user.name.replace(/'/g, "\\'"); 
             
-            // S1N Row Style: Clean border, no background colors
             const rowClass = isBanned 
-                ? "border-border opacity-60" // Banned: Faded
+                ? "border-border opacity-60" 
                 : "border-border hover:border-main";
 
             const div = document.createElement('div');
@@ -195,6 +221,95 @@ window.loadAdminPanel = function(filter = '') {
         });
         if (window.lucide) lucide.createIcons();
     });
+};
+
+// --- SOUND MANAGER FUNCTIONS ---
+
+window.loadAdminSounds = function() {
+    const container = document.getElementById('admin-sound-list');
+    if(!container) return;
+
+    firebase.database().ref('system/sounds').on('value', (snapshot) => {
+        const sounds = snapshot.val();
+        container.innerHTML = '';
+
+        if (!sounds) {
+            container.innerHTML = '<p class="text-[10px] text-muted italic">No custom frequencies active.</p>';
+            return;
+        }
+
+        Object.entries(sounds).forEach(([key, data]) => {
+            const div = document.createElement('div');
+            div.className = "flex justify-between items-center p-2 border border-border rounded bg-input mb-2";
+            div.innerHTML = `
+                <div class="flex items-center gap-2 overflow-hidden">
+                    <i data-lucide="music" class="w-3 h-3 text-muted shrink-0"></i>
+                    <span class="text-xs font-bold truncate text-main">${data.name}</span>
+                </div>
+                <button onclick="adminDeleteSound('${key}')" class="text-muted hover:text-rose-500 p-1">
+                    <i data-lucide="x" class="w-3 h-3"></i>
+                </button>
+            `;
+            container.appendChild(div);
+        });
+        if(window.lucide) lucide.createIcons();
+    });
+};
+
+window.adminAddSound = function() {
+    const nameInput = document.getElementById('sound-name-input');
+    const fileInput = document.getElementById('sound-file-input');
+    const btn = document.getElementById('btn-upload-sound');
+    
+    const name = nameInput.value.trim();
+    const file = fileInput.files[0];
+
+    if(!name) return alert("Frequency Name required.");
+    if(!file) return alert("Select an audio file.");
+
+    // SIZE CHECK: Limit to 2MB to prevent Database freezing
+    if(file.size > 2 * 1024 * 1024) {
+        return alert("File too large. Max limit: 2MB.");
+    }
+
+    btn.textContent = "Encoding...";
+    btn.disabled = true;
+
+    // Convert File to Base64 Data URI
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        const base64Url = e.target.result;
+
+        firebase.database().ref('system/sounds').push({
+            name: name,
+            url: base64Url // Stores the actual file data as text
+        }).then(() => {
+            if(window.showNotification) window.showNotification("System Update", "Audio encoded & uploaded.", "success");
+            nameInput.value = '';
+            fileInput.value = '';
+            btn.textContent = "Upload Frequency";
+            btn.disabled = false;
+        }).catch(err => {
+            alert("Upload failed: " + err.message);
+            btn.textContent = "Upload Frequency";
+            btn.disabled = false;
+        });
+    };
+
+    reader.onerror = function() {
+        alert("Error reading file.");
+        btn.textContent = "Upload Frequency";
+        btn.disabled = false;
+    };
+
+    reader.readAsDataURL(file);
+};
+
+window.adminDeleteSound = function(key) {
+    if(confirm("Terminate this audio protocol?")) {
+        firebase.database().ref('system/sounds/' + key).remove();
+    }
 };
 
 // --- ADMIN ACTIONS ---
@@ -333,6 +448,7 @@ window.handleAuth = async function(e) {
                 }
                 if (userData.password === password) {
                     loginUser(userData);
+                    window.location.reload(); 
                 } else {
                     throw new Error("Authentication Failed.");
                 }
@@ -340,6 +456,7 @@ window.handleAuth = async function(e) {
                 throw new Error("ID not found.");
             }
         } else {
+            // --- SIGN UP LOGIC ---
             if (password !== confirmPass) throw new Error("Key Mismatch.");
             if (userData) throw new Error("ID Taken.");
 
@@ -359,6 +476,11 @@ window.handleAuth = async function(e) {
 
             await userRef.set(newUser);
             loginUser(newUser);
+
+            // --- TRIGGER ONBOARDING (NEW) ---
+            setTimeout(() => {
+                if(window.startOnboarding) window.startOnboarding();
+            }, 500); 
         }
     } catch (error) {
         alert(error.message);
@@ -384,8 +506,6 @@ function loginUser(user) {
     mainApp.classList.remove('hidden');
     
     if(window.initChatNotifications) window.initChatNotifications();
-
-    window.location.reload(); 
 }
 
 // --- SYNC SCORE TO CLOUD ---
@@ -399,7 +519,7 @@ window.syncUserToDB = function(newPoints, newStreak, monthlyPoints, lastActiveMo
     // FETCH LOCAL DATA TO ENSURE SYNC
     const userLocal = JSON.parse(localStorage.getItem('auraUser')) || {};
     const inventory = userLocal.inventory || [];
-    const unlockedAchievements = userLocal.unlockedAchievements || []; // FIX: Include Achievements in Push
+    const unlockedAchievements = userLocal.unlockedAchievements || []; 
     
     let completedTasks = 0;
     let onTime = 0;
@@ -437,7 +557,7 @@ window.syncUserToDB = function(newPoints, newStreak, monthlyPoints, lastActiveMo
         monthlyPoints: monthlyPoints,
         lastActiveMonth: lastActiveMonth,
         inventory: inventory, 
-        unlockedAchievements: unlockedAchievements, // FIX: Push to DB
+        unlockedAchievements: unlockedAchievements,
         totalMinutes: stats.minutes,
         totalSessions: stats.sessions || 0,
         totalTasks: completedTasks,
@@ -456,7 +576,6 @@ function listenToStats() {
                  window.location.reload();
              }
 
-             // FIX: Read FRESH data from LocalStorage to prevent overwriting achievements with stale 'currentUser' variable
              let localUser = JSON.parse(localStorage.getItem('auraUser')) || currentUser;
              let needsSave = false;
 
@@ -469,7 +588,6 @@ function listenToStats() {
                  localUser.inventory = data.inventory;
                  needsSave = true;
              }
-             // FIX: Sync Achievements from Cloud if they exist there
              if(data.unlockedAchievements) {
                  localUser.unlockedAchievements = data.unlockedAchievements;
                  needsSave = true;

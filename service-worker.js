@@ -1,6 +1,6 @@
-/* service-worker.js - S1N Offline Capability */
+/* service-worker.js - S1N Offline Capability (Updated) */
 
-const CACHE_NAME = 's1n-productive-v1';
+const CACHE_NAME = 's1n-productive-v2'; // Incremented version to force update
 
 const ASSETS_TO_CACHE = [
   './',
@@ -15,8 +15,22 @@ const ASSETS_TO_CACHE = [
   './profile.js',
   './reports.js',
   './shop.js',
-  './chat.js',           // Added missing file
-  './achievements.js',   // Added missing file
+  './chat.js',          
+  './achievements.js',
+  './onboarding.js',  // New Script
+  
+  // Adaptive Onboarding Images
+  './122393.jpg', // Tasks Dark
+  './122395.jpg', // Tasks Light
+  './122397.jpg', // Timer Light
+  './122399.jpg', // Timer Dark
+  './122401.jpg', // Analytics Dark
+  './122405.jpg', // Analytics Light
+  './122407.jpg', // Network Light
+  './122409.jpg', // Network Dark
+  './122411.jpg', // Market Dark
+  './122413.jpg', // Market Light
+  
   'https://cdn.tailwindcss.com',
   'https://unpkg.com/lucide@latest',
   'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js'
@@ -30,6 +44,7 @@ self.addEventListener('install', (event) => {
                 console.log('[Service Worker] Caching all assets');
                 return cache.addAll(ASSETS_TO_CACHE);
             })
+            .then(() => self.skipWaiting()) // Activate immediately
     );
 });
 
@@ -45,7 +60,7 @@ self.addEventListener('activate', (event) => {
                     }
                 })
             );
-        })
+        }).then(() => self.clients.claim())
     );
 });
 
