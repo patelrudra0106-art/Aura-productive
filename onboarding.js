@@ -1,35 +1,35 @@
-/* onboarding.js - S1N Adaptive Intro System (Fixed Layout) */
+/* onboarding.js - S1N Adaptive Intro System (Assets Folder Update) */
 
 const ONBOARDING_SLIDES = [
     {
         title: "Protocol System",
         desc: "Build your routine. Execute protocols and track adherence.",
-        imgDark: "122393.jpg",
-        imgLight: "122395.jpg"
+        imgDark: "assets/122393.jpg",  // UPDATED PATH
+        imgLight: "assets/122395.jpg" // UPDATED PATH
     },
     {
         title: "Focus Engine",
         desc: "Enter deep work states with the timer and audio environments.",
-        imgDark: "122399.jpg",
-        imgLight: "122397.jpg"
+        imgDark: "assets/122399.jpg",
+        imgLight: "assets/122397.jpg"
     },
     {
         title: "System Analytics",
         desc: "Visualize efficiency. Track focus time and completion rates.",
-        imgDark: "122401.jpg",
-        imgLight: "122405.jpg"
+        imgDark: "assets/122401.jpg",
+        imgLight: "assets/122405.jpg"
     },
     {
         title: "Global Network",
         desc: "Compete on the leaderboard. Compare streaks with other agents.",
-        imgDark: "122409.jpg",
-        imgLight: "122407.jpg"
+        imgDark: "assets/122409.jpg",
+        imgLight: "assets/122407.jpg"
     },
     {
         title: "Market Economy",
         desc: "Earn Credits. Purchase status badges and streak repairs.",
-        imgDark: "122411.jpg",
-        imgLight: "122413.jpg"
+        imgDark: "assets/122411.jpg",
+        imgLight: "assets/122413.jpg"
     }
 ];
 
@@ -78,12 +78,10 @@ function renderSlide() {
     const slide = ONBOARDING_SLIDES[currentSlideIndex];
     const isLast = currentSlideIndex === ONBOARDING_SLIDES.length - 1;
     
-    // Theme Detection
     const isDark = document.documentElement.classList.contains('dark');
     const imgSrc = isDark ? slide.imgDark : slide.imgLight;
 
     // RENDER CONTENT
-    // FIXED: Removed 'aspect-[9/19]' and used fixed 'h-96 w-56' to prevent collapse
     content.innerHTML = `
         <div class="flex flex-col items-center justify-center w-full h-full animate-fade-in select-none pt-4">
             
@@ -91,7 +89,7 @@ function renderSlide() {
                 <img src="${imgSrc}" 
                      class="absolute inset-0 w-full h-full object-cover" 
                      alt="${slide.title}"
-                     onerror="this.parentElement.style.backgroundColor = 'red'; console.log('Image failed:', this.src)">
+                     onerror="console.log('Image failed:', this.src)">
             </div>
 
             <div class="px-6 text-center">
