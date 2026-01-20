@@ -1,4 +1,4 @@
-/* S1N Industrial Theme (Colorful Update) */
+/* S1N Industrial Theme (Colorful Update) - FIXED HISTORY */
 
 // --- POMODORO CONFIG ---
 let settings = JSON.parse(localStorage.getItem('auraTimerSettings')) || {
@@ -54,7 +54,7 @@ function initPomodoro() {
     }
     
     updateDisplay();
-    renderHistory(); 
+    renderHistory(); // Now functional
     setupModeListeners();
     setupSoundSystem();
 }
@@ -305,7 +305,53 @@ function addToHistory(duration, label) {
     renderHistory();
 }
 
-function renderHistory() {}
+// --- FIXED RENDER FUNCTION ---
+function renderHistory() {
+    // Note: In index.html, we need a container for this.
+    // I will target the bottom of the 'view-focus' section if a container exists,
+    // or we can add one dynamically if needed.
+    
+    const focusView = document.getElementById('view-focus');
+    if (!focusView) return;
+
+    let historyContainer = document.getElementById('session-history');
+    if (!historyContainer) {
+        historyContainer = document.createElement('div');
+        historyContainer.id = 'session-history';
+        historyContainer.className = "w-full mt-8 animate-fade-in";
+        focusView.appendChild(historyContainer);
+    }
+
+    if (history.length === 0) {
+        historyContainer.innerHTML = '';
+        return;
+    }
+
+    let html = `
+        <div class="flex justify-between items-center mb-4 border-t border-border pt-6">
+            <h4 class="text-[10px] font-bold uppercase text-muted tracking-widest">Session Log</h4>
+            <button onclick="clearHistory()" class="text-[10px] font-bold uppercase text-rose-500 hover:text-rose-400">Clear</button>
+        </div>
+        <div class="space-y-2">
+    `;
+
+    history.forEach(session => {
+        html += `
+            <div class="flex justify-between items-center p-3 border border-border rounded-xl bg-card">
+                <div>
+                    <p class="text-xs font-bold text-main">${session.label || 'Focus Session'}</p>
+                    <p class="text-[10px] text-muted font-mono">${session.date} • ${session.time}</p>
+                </div>
+                <div class="font-mono font-bold text-main text-sm">
+                    ${session.duration}m
+                </div>
+            </div>
+        `;
+    });
+
+    html += `</div>`;
+    historyContainer.innerHTML = html;
+}
 
 window.clearHistory = function() {
     if(confirm('Purge session logs?')) {

@@ -1,4 +1,4 @@
-/* profile.js - S1N Industrial Theme Update */
+/* profile.js - S1N Industrial Theme Update (With Data Export) */
 
 // --- STATE ---
 let userProfile = JSON.parse(localStorage.getItem('auraProfile')) || {
@@ -147,6 +147,21 @@ function renderProfileBadges() {
 window.openAccount = function() {
     const modal = document.getElementById('account-modal');
     if(modal) {
+        // --- DYNAMICALLY INJECT EXPORT BUTTON IF MISSING ---
+        // This ensures the button appears without editing index.html
+        const passBtn = document.querySelector('button[onclick="toggleChangePass()"]');
+        if (passBtn && passBtn.parentNode && !document.getElementById('btn-export-data')) {
+            const exportBtn = document.createElement('button');
+            exportBtn.id = 'btn-export-data';
+            exportBtn.className = "w-full py-2.5 mb-2 border border-border rounded-xl text-xs font-bold uppercase tracking-wide hover:bg-input transition-colors text-main";
+            exportBtn.innerHTML = '<span class="flex items-center justify-center gap-2"><i data-lucide="download" class="w-3 h-3"></i> Backup Data</span>';
+            exportBtn.onclick = window.exportUserData;
+            
+            // Insert before the Change Password button
+            passBtn.parentNode.insertBefore(exportBtn, passBtn);
+            if(window.lucide) lucide.createIcons();
+        }
+
         modal.classList.remove('hidden');
         updateProfileUI();
     }
@@ -158,6 +173,38 @@ window.closeAccount = function() {
     // Hide password form when closing to reset state
     if(passForm) passForm.classList.add('hidden');
     if(modal) modal.classList.add('hidden');
+};
+
+// --- DATA EXPORT (OPTION C) ---
+window.exportUserData = function() {
+    const user = JSON.parse(localStorage.getItem('auraUser'));
+    if (!user) return alert("No identity found.");
+
+    const exportData = {
+        _generated: new Date().toISOString(),
+        identity: user,
+        profile: JSON.parse(localStorage.getItem('auraProfile')),
+        stats: JSON.parse(localStorage.getItem('auraStats')),
+        settings: JSON.parse(localStorage.getItem('auraTimerSettings')),
+        history: JSON.parse(localStorage.getItem('auraHistory')),
+        tasks: {}
+    };
+
+    // Grab tasks specific to user
+    const taskKey = `auraTasks_${user.name}`;
+    if (localStorage.getItem(taskKey)) {
+        exportData.tasks = JSON.parse(localStorage.getItem(taskKey));
+    }
+
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", `S1N_BACKUP_${user.name}_${new Date().toISOString().slice(0,10)}.json`);
+    document.body.appendChild(downloadAnchorNode); // required for firefox
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+
+    if(window.showNotification) window.showNotification("Backup Complete", "Data package downloaded.", "success");
 };
 
 // --- PASSWORD RESET LOGIC ---
