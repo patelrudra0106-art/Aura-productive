@@ -10,7 +10,7 @@
   "icons": [
     {
       "src": "https://ui-avatars.com/api/?name=S1N&background=000000&color=ffffff&size=192&font-size=0.35&length=3&bold=true",
-      "sizes": "192x192",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     },
