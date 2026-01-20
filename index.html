@@ -27,6 +27,7 @@
                         'slide-in': 'slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                         'pop': 'pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
                         'slide-in-top': 'slideInTop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'rgb-border': 'rgbBorder 3s linear infinite',
                     }
                 }
             }
@@ -34,6 +35,7 @@
     </script>
     
     <script>
+        // Init Theme immediately to prevent flash
         if (localStorage.getItem('auraTheme') === 'dark' || 
            (!('auraTheme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
@@ -46,7 +48,7 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-body text-main min-h-screen selection:bg-black selection:text-white dark:selection:bg-white dark:selection:text-black">
+<body class="bg-body text-main min-h-screen selection:bg-black selection:text-white dark:selection:bg-white dark:selection:text-black transition-colors duration-300">
 
     <div id="auth-overlay" class="fixed inset-0 z-[200] flex flex-col items-center justify-center p-6 bg-body transition-all duration-500">
         <div class="w-full max-w-sm animate-fade-in">
@@ -127,9 +129,9 @@
                     </div>
                 </form>
                 <div class="flex gap-2 mb-6 border-b border-border pb-4 overflow-x-auto scrollbar-hide">
-                    <button data-filter="all" class="filter-btn active text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-main bg-main text-body">All</button>
-                    <button data-filter="active" class="filter-btn text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-transparent text-muted hover:text-main">Active</button>
-                    <button data-filter="completed" class="filter-btn text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-transparent text-muted hover:text-main">Done</button>
+                    <button data-filter="all" class="filter-btn active text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-main bg-main text-body transition-colors">All</button>
+                    <button data-filter="active" class="filter-btn text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-transparent text-muted hover:text-main transition-colors">Active</button>
+                    <button data-filter="completed" class="filter-btn text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-transparent text-muted hover:text-main transition-colors">Done</button>
                 </div>
                 <ul id="task-list" class="space-y-3"></ul>
                 <div id="empty-state" class="hidden py-12 border border-dashed border-border rounded-2xl text-center">
@@ -418,10 +420,14 @@
     <script src="achievements.js"></script> 
     <script src="profile.js"></script>
     <script src="shop.js"></script> 
+    
+    <script src="tasks.js"></script>
+    
     <script src="app.js"></script>
     <script src="pomodoro.js"></script>
     <script src="reports.js"></script>
-    <script src="onboarding.js"></script> <script>
+    <script src="onboarding.js"></script> 
+    <script>
         lucide.createIcons();
         
         function switchView(viewName) {
@@ -439,6 +445,7 @@
             if(viewName === 'reports' && window.initReports) window.initReports();
             if(viewName === 'admin' && window.loadAdminPanel) window.loadAdminPanel();
             if(viewName === 'shop' && window.loadShop) window.loadShop(); 
+            if(viewName === 'tasks' && window.loadTasks) window.loadTasks(); 
         }
 
         // Register Service Worker for PWA
