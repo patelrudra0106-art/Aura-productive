@@ -1,4 +1,4 @@
-/* tasks.js - S1N Task Management & Logic */
+/* tasks.js - S1N Task Management & Logic (FIXED) */
 
 let currentFilter = 'all';
 
@@ -14,28 +14,31 @@ window.loadTasks = function() {
     // Render
     renderTasks();
     
-    // Setup Input Listener for "Add" Button State
+    // --- FIX START: Logic to safely attach listeners ---
     const input = document.getElementById('task-input');
     const addBtn = document.getElementById('add-btn');
+    const form = document.getElementById('task-form');
+
+    // 1. Input Listener: Use 'oninput' to overwrite previous listeners cleanly
     if (input && addBtn) {
-        input.addEventListener('input', (e) => {
+        // Ensure button state is correct immediately on load
+        addBtn.disabled = input.value.trim() === '';
+
+        input.oninput = (e) => {
             addBtn.disabled = e.target.value.trim() === '';
             // Visual opacity update handled by CSS :disabled
-        });
+        };
     }
 
-    // Setup Form Submit
-    const form = document.getElementById('task-form');
+    // 2. Form Submit: Use 'onsubmit' instead of cloneNode
+    // This prevents the "Zombie Form" bug where the DOM reference is lost
     if (form) {
-        // Remove old listeners to prevent duplicates
-        const newForm = form.cloneNode(true);
-        form.parentNode.replaceChild(newForm, form);
-        
-        newForm.addEventListener('submit', (e) => {
+        form.onsubmit = (e) => {
             e.preventDefault();
             addNewTask();
-        });
+        };
     }
+    // --- FIX END ---
 
     // Setup Filter Buttons
     setupFilterButtons();
@@ -71,6 +74,9 @@ function addNewTask() {
 
     // Juice: Small vibration/sound
     if(window.showNotification) window.showNotification("PROTOCOL ADDED", "Task queued.", "info");
+    
+    // Check "Initiation" achievement immediately
+    if(window.checkAchievements) window.checkAchievements();
 }
 
 window.toggleTask = function(id) {
@@ -172,7 +178,7 @@ function renderTasks() {
     if(window.lucide) lucide.createIcons();
 }
 
-// --- FILTER BUTTON LOGIC (FIX FOR BLACK TEXT) ---
+// --- FILTER BUTTON LOGIC ---
 function setupFilterButtons() {
     const buttons = document.querySelectorAll('.filter-btn');
     
