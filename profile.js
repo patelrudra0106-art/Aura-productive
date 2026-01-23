@@ -1,6 +1,7 @@
-/* profile.js - S1N Industrial Theme Update (With Data Export) */
+/* profile.js - S1N Industrial Theme Update (FIXED) */
 
 // --- STATE ---
+// We initialize this for UI rendering, but logic functions will now reload fresh data
 let userProfile = JSON.parse(localStorage.getItem('auraProfile')) || {
     name: 'Guest',
     points: 0,        
@@ -14,19 +15,31 @@ let userProfile = JSON.parse(localStorage.getItem('auraProfile')) || {
 (function checkTimeResets() {
     const now = new Date();
     const currentMonth = now.toISOString().slice(0, 7); 
-
-    const savedMonth = userProfile.lastActiveMonth || "";
+    
+    // Reload fresh to be safe
+    let profile = JSON.parse(localStorage.getItem('auraProfile')) || userProfile;
+    let user = JSON.parse(localStorage.getItem('auraUser')); 
+    
+    const savedMonth = profile.lastActiveMonth || "";
     let hasChanged = false;
 
     // Monthly Reset (For League)
     if (savedMonth !== currentMonth) {
-        userProfile.monthlyPoints = 0;
-        userProfile.lastActiveMonth = currentMonth;
+        profile.monthlyPoints = 0;
+        profile.lastActiveMonth = currentMonth;
+        
+        // Sync to user if exists
+        if(user) {
+            user.monthlyPoints = 0;
+            user.lastActiveMonth = currentMonth;
+        }
         hasChanged = true;
     }
 
     if (hasChanged) {
-        saveProfile();
+        localStorage.setItem('auraProfile', JSON.stringify(profile));
+        if(user) localStorage.setItem('auraUser', JSON.stringify(user));
+        userProfile = profile; // Update global state
     }
 })();
 
@@ -36,74 +49,96 @@ const streakDisplay = document.getElementById('display-streak');
 const navStreak = document.getElementById('streak-count');
 const profileNameDisplay = document.getElementById('profile-name');
 
-// --- LOGIC ---
+// --- LOGIC (FIXED) ---
 window.addPoints = function(amount, reason) {
-    userProfile.points += amount;
+    // 1. RELOAD DATA (Fixes "Free Item" glitch by getting fresh points from Shop updates)
+    let user = JSON.parse(localStorage.getItem('auraUser'));
+    let profile = JSON.parse(localStorage.getItem('auraProfile')) || {};
     
-    const currentMonth = new Date().toISOString().slice(0, 7);
-    if (userProfile.lastActiveMonth !== currentMonth) {
-        userProfile.monthlyPoints = 0;
-        userProfile.lastActiveMonth = currentMonth;
-    }
-    userProfile.monthlyPoints = (userProfile.monthlyPoints || 0) + amount;
+    if (!user) return; // Safety check
 
-    saveProfile();
+    // 2. UPDATE POINTS
+    user.points = (user.points || 0) + amount;
+    
+    // Handle Month Logic
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    if (user.lastActiveMonth !== currentMonth) {
+        user.monthlyPoints = 0;
+        user.lastActiveMonth = currentMonth;
+    }
+    user.monthlyPoints = (user.monthlyPoints || 0) + amount;
+
+    // 3. SYNC PROFILE (Keep profile in sync with User)
+    profile.points = user.points;
+    profile.monthlyPoints = user.monthlyPoints;
+    profile.lastActiveMonth = user.lastActiveMonth;
+
+    // 4. SAVE BOTH (Fixes "Shop not seeing points" bug)
+    localStorage.setItem('auraUser', JSON.stringify(user));
+    localStorage.setItem('auraProfile', JSON.stringify(profile));
+    
+    // Update global variable for UI
+    userProfile = profile;
     
     // --- TRIGGER ACHIEVEMENT CHECK ---
     if(window.checkAchievements) window.checkAchievements();
     
     updateProfileUI();
     
-    if(window.syncUserToDB) window.syncUserToDB(userProfile.points, userProfile.streak, userProfile.monthlyPoints, userProfile.lastActiveMonth);
+    if(window.syncUserToDB) window.syncUserToDB(user.points, user.streak, user.monthlyPoints, user.lastActiveMonth);
     
     if(amount > 0 && window.showNotification) window.showNotification(`CREDITS +${amount}`, reason, 'success');
 };
 
 window.updateStreak = function() {
+    // 1. RELOAD DATA
+    let user = JSON.parse(localStorage.getItem('auraUser'));
+    let profile = JSON.parse(localStorage.getItem('auraProfile')) || {};
+    
+    if (!user) return;
+
     const today = new Date().toISOString().split('T')[0];
-    if (userProfile.lastTaskDate === today) return; 
+    if (user.lastTaskDate === today) return; 
 
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayStr = yesterday.toISOString().split('T')[0];
 
-    if (userProfile.lastTaskDate === yesterdayStr) {
-        userProfile.streak += 1;
+    // 2. UPDATE STREAK
+    if (user.lastTaskDate === yesterdayStr) {
+        user.streak = (user.streak || 0) + 1;
     } else {
-        userProfile.streak = 1;
+        user.streak = 1;
     }
 
-    userProfile.lastTaskDate = today;
-    saveProfile();
+    user.lastTaskDate = today;
+    
+    // 3. SYNC PROFILE
+    profile.streak = user.streak;
+    profile.lastTaskDate = user.lastTaskDate;
+
+    // 4. SAVE BOTH
+    localStorage.setItem('auraUser', JSON.stringify(user));
+    localStorage.setItem('auraProfile', JSON.stringify(profile));
+    
+    userProfile = profile; // Update global state
     
     // --- TRIGGER ACHIEVEMENT CHECK ---
     if(window.checkAchievements) window.checkAchievements();
 
     updateProfileUI();
     
-    if(window.syncUserToDB) window.syncUserToDB(userProfile.points, userProfile.streak, userProfile.monthlyPoints, userProfile.lastActiveMonth);
+    if(window.syncUserToDB) window.syncUserToDB(user.points, user.streak, user.monthlyPoints, user.lastActiveMonth);
 };
 
-function saveProfile() {
-    localStorage.setItem('auraProfile', JSON.stringify(userProfile));
-}
-
 function updateProfileUI() {
+    // Reload global to ensure UI is fresh
+    userProfile = JSON.parse(localStorage.getItem('auraProfile')) || userProfile;
+
     if(navStreak) navStreak.textContent = userProfile.streak;
-    
-    // ANIMATED STATS
-    if(pointsDisplay) {
-        pointsDisplay.innerHTML = `<span class="animate-title inline-block">${userProfile.points.toLocaleString()}</span>`;
-    }
-    
-    if(streakDisplay) {
-        streakDisplay.innerHTML = `<span class="animate-title stagger-1 inline-block">${userProfile.streak}</span>`;
-    }
-    
-    if(profileNameDisplay) {
-        const name = userProfile.name || 'User';
-        profileNameDisplay.innerHTML = `<span class="animate-title stagger-1 inline-block">${name}</span>`;
-    }
+    if(pointsDisplay) pointsDisplay.textContent = userProfile.points.toLocaleString();
+    if(streakDisplay) streakDisplay.textContent = userProfile.streak;
+    if(profileNameDisplay) profileNameDisplay.textContent = userProfile.name || 'User';
 
     renderProfileBadges();
     
@@ -116,20 +151,17 @@ function renderProfileBadges() {
     const user = JSON.parse(localStorage.getItem('auraUser'));
     const inventory = (user && user.inventory) ? user.inventory : [];
     
-    // Target the specific container ID we added in index.html
     const badgeContainer = document.getElementById('profile-badges');
     if (!badgeContainer) return;
 
     if (inventory.length === 0) {
         badgeContainer.innerHTML = '';
-        badgeContainer.className = 'hidden'; // Hide container if empty to save space
+        badgeContainer.className = 'hidden'; 
         return;
     }
 
-    // Force Grid Layout: 5 columns, centered items
     badgeContainer.className = "grid grid-cols-5 gap-2 mb-4 justify-items-center";
 
-    // Icon Lookup
     const badgeMap = {
         'badge_crown': 'crown', 
         'badge_star': 'star', 
@@ -140,15 +172,11 @@ function renderProfileBadges() {
 
     badgeContainer.innerHTML = '';
     
-    inventory.forEach((itemId, index) => {
+    inventory.forEach(itemId => {
         const icon = badgeMap[itemId] || 'award';
         
         const badge = document.createElement('div');
-        // Fixed square size (w-10 h-10) to prevent full-width stacking
-        // Added animate-slide-in for staggered badge entry
-        badge.className = `w-10 h-10 flex items-center justify-center rounded-lg border border-border text-muted hover:text-main hover:border-main transition-colors cursor-help bg-card animate-slide-in`;
-        badge.style.animationDelay = `${index * 50}ms`;
-        
+        badge.className = `w-10 h-10 flex items-center justify-center rounded-lg border border-border text-muted hover:text-main hover:border-main transition-colors cursor-help bg-card`;
         badge.title = itemId;
         badge.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5"></i>`;
         badgeContainer.appendChild(badge);
@@ -162,7 +190,6 @@ window.openAccount = function() {
     const modal = document.getElementById('account-modal');
     if(modal) {
         // --- DYNAMICALLY INJECT EXPORT BUTTON IF MISSING ---
-        // This ensures the button appears without editing index.html
         const passBtn = document.querySelector('button[onclick="toggleChangePass()"]');
         if (passBtn && passBtn.parentNode && !document.getElementById('btn-export-data')) {
             const exportBtn = document.createElement('button');
@@ -170,8 +197,6 @@ window.openAccount = function() {
             exportBtn.className = "w-full py-2.5 mb-2 border border-border rounded-xl text-xs font-bold uppercase tracking-wide hover:bg-input transition-colors text-main";
             exportBtn.innerHTML = '<span class="flex items-center justify-center gap-2"><i data-lucide="download" class="w-3 h-3"></i> Backup Data</span>';
             exportBtn.onclick = window.exportUserData;
-            
-            // Insert before the Change Password button
             passBtn.parentNode.insertBefore(exportBtn, passBtn);
             if(window.lucide) lucide.createIcons();
         }
@@ -184,12 +209,11 @@ window.openAccount = function() {
 window.closeAccount = function() {
     const modal = document.getElementById('account-modal');
     const passForm = document.getElementById('change-pass-form');
-    // Hide password form when closing to reset state
     if(passForm) passForm.classList.add('hidden');
     if(modal) modal.classList.add('hidden');
 };
 
-// --- DATA EXPORT (OPTION C) ---
+// --- DATA EXPORT ---
 window.exportUserData = function() {
     const user = JSON.parse(localStorage.getItem('auraUser'));
     if (!user) return alert("No identity found.");
@@ -204,7 +228,6 @@ window.exportUserData = function() {
         tasks: {}
     };
 
-    // Grab tasks specific to user
     const taskKey = `auraTasks_${user.name}`;
     if (localStorage.getItem(taskKey)) {
         exportData.tasks = JSON.parse(localStorage.getItem(taskKey));
@@ -214,7 +237,7 @@ window.exportUserData = function() {
     const downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute("href", dataStr);
     downloadAnchorNode.setAttribute("download", `S1N_BACKUP_${user.name}_${new Date().toISOString().slice(0,10)}.json`);
-    document.body.appendChild(downloadAnchorNode); // required for firefox
+    document.body.appendChild(downloadAnchorNode); 
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
 

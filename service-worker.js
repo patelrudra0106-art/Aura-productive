@@ -1,6 +1,6 @@
-/* service-worker.js - S1N Offline Capability (Manifest Fix 2) */
+/* service-worker.js - S1N Offline Capability (Animation Update) */
 
-const CACHE_NAME = 's1n-productive-v9'; // Bumped version to v9
+const CACHE_NAME = 's1n-productive-v5'; // Version bumped for Animation System
 
 const ASSETS_TO_CACHE = [
   './',

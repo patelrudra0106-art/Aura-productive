@@ -1,4 +1,4 @@
-/* tasks.js - S1N Task Management & Logic (FIXED) */
+/* tasks.js - S1N Task Management & Logic (FIXED: 5 Task Limit) */
 
 let currentFilter = 'all';
 
@@ -50,6 +50,29 @@ function addNewTask() {
     
     if (!text) return;
 
+    // --- DAILY LIMIT CHECK (NEW) ---
+    const todayStr = new Date().toLocaleDateString();
+    
+    // Count tasks created today
+    // We check the 'createdAt' timestamp against today's date
+    const tasksToday = window.tasks.filter(t => {
+        const taskDate = new Date(t.createdAt).toLocaleDateString();
+        return taskDate === todayStr;
+    }).length;
+
+    if (tasksToday >= 5) {
+        if(window.showNotification) {
+            window.showNotification("LIMIT REACHED", "Max 5 protocols per day.", "warning");
+        } else {
+            alert("Daily Limit Reached: Max 5 protocols per day.");
+        }
+        
+        // Clear input to indicate rejection or leave it (user choice). 
+        // Usually better to leave it so they can copy it elsewhere if needed.
+        return; 
+    }
+    // --- END LIMIT CHECK ---
+
     const newTask = {
         id: Date.now(),
         text: text,
@@ -70,7 +93,7 @@ function addNewTask() {
     document.getElementById('add-btn').disabled = true;
 
     // Juice: Small vibration/sound
-    if(window.showNotification) window.showNotification("PROTOCOL ADDED", "Task queued.", "info");
+    if(window.showNotification) window.showNotification("PROTOCOL ADDED", `Task queued (${tasksToday + 1}/5).`, "info");
     
     // Check "Initiation" achievement immediately
     if(window.checkAchievements) window.checkAchievements();
@@ -82,10 +105,10 @@ window.toggleTask = function(id) {
         task.completed = !task.completed;
         
         if (task.completed) {
-            // --- TASK COMPLETED ---
+            // --- TASK COMPLETE (+10) ---
             task.completedAt = Date.now();
             
-            // Trigger Gamification (+ Points)
+            // Trigger Gamification
             if(window.addPoints) window.addPoints(10, "Task Complete");
             if(window.updateStreak) window.updateStreak();
             
@@ -94,10 +117,10 @@ window.toggleTask = function(id) {
             audio.volume = 0.2;
             audio.play().catch(()=>{});
         } else {
-            // --- TASK UNCHECKED (FIXED) ---
+            // --- TASK UNDONE (-10) ---
             task.completedAt = null;
-
-            // Deduct Points to prevent farming loop
+            
+            // Deduct points if task is unchecked to prevent farming
             if(window.addPoints) window.addPoints(-10, "Task Undone");
         }
         
@@ -108,14 +131,13 @@ window.toggleTask = function(id) {
 
 window.deleteTask = function(id) {
     if(confirm("Delete this protocol?")) {
-        // Optional: If you want to prevent users from completing a task (+10) 
-        // and then deleting it to keep the points, uncomment the lines below:
+        // Check if task was completed before deleting
+        // If they completed it (+10) and delete it, we must take the points back
+        const task = window.tasks.find(t => t.id === id);
         
-        /* const task = window.tasks.find(t => t.id === id);
         if (task && task.completed && window.addPoints) {
             window.addPoints(-10, "Task Deleted");
         }
-        */
 
         window.tasks = window.tasks.filter(t => t.id !== id);
         saveTasks();
