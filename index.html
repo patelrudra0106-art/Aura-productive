@@ -28,6 +28,7 @@
                         'pop': 'pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
                         'slide-in-top': 'slideInTop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                         'rgb-border': 'rgbBorder 3s linear infinite',
+                        'shake': 'shake 0.4s cubic-bezier(.36,.07,.19,.97) both',
                     }
                 }
             }
@@ -139,8 +140,14 @@
                 </div>
             </section>
 
-            <section id="view-focus" class="view-section hidden animate-fade-in flex flex-col items-center">
-                <div id="active-task-display" class="hidden w-full mb-8">
+            <section id="view-focus" class="view-section hidden animate-fade-in flex flex-col items-center pt-2">
+                
+                <div class="flex p-1 bg-input rounded-xl border border-border mb-4 w-full max-w-[280px]">
+                    <button id="switch-pomodoro" class="flex-1 py-2 text-xs font-bold uppercase rounded-lg bg-card shadow-sm text-main transition-all">Pomodoro</button>
+                    <button id="switch-stopwatch" class="flex-1 py-2 text-xs font-bold uppercase rounded-lg text-muted hover:text-main transition-all">Stopwatch</button>
+                </div>
+
+                <div id="active-task-display" class="hidden w-full mb-6">
                     <div class="flex items-center justify-between p-4 border border-border rounded-full bg-card">
                         <span class="text-xs font-bold uppercase tracking-wider text-muted ml-2">Focusing:</span>
                         <span id="focus-task-text" class="font-bold text-sm truncate px-2">Task Name</span>
@@ -148,10 +155,10 @@
                     </div>
                 </div>
 
-                <div class="mb-6 w-full max-w-[200px]">
+                <div class="mb-4 w-full max-w-[280px]">
                     <div class="relative">
                         <i data-lucide="music" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted z-10"></i>
-                        <select id="sound-selector" class="input-s1n pl-9 py-2 text-xs font-bold uppercase tracking-wider cursor-pointer bg-card hover:border-main appearance-none">
+                        <select id="sound-selector" class="input-s1n pl-9 py-2.5 text-xs font-bold uppercase tracking-wider cursor-pointer bg-card hover:border-main appearance-none">
                             <option value="none">Silent Mode</option>
                             <option value="rain">Heavy Rain</option>
                             <option value="forest">Night Forest</option>
@@ -163,6 +170,12 @@
                     </div>
                 </div>
 
+                <div id="timer-submodes" class="w-full max-w-[280px] grid grid-cols-3 gap-2 mb-8 transition-all duration-300">
+                    <button id="mode-work" class="px-2 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg border border-main bg-main text-body">Focus</button>
+                    <button id="mode-short" class="px-2 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg border border-transparent text-muted hover:bg-input">Short</button>
+                    <button id="mode-long" class="px-2 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg border border-transparent text-muted hover:bg-input">Long</button>
+                </div>
+
                 <div class="card-s1n p-8 w-full flex flex-col items-center relative overflow-hidden mb-6">
                     <div class="relative w-64 h-64 mb-8">
                         <svg class="w-full h-full transform -rotate-90">
@@ -170,7 +183,7 @@
                             <circle id="progress-ring" cx="128" cy="128" r="118" stroke="var(--text-main)" stroke-width="4" fill="none" stroke-dasharray="741" stroke-dashoffset="0" stroke-linecap="round" />
                         </svg>
                         <div class="absolute inset-0 flex flex-col items-center justify-center">
-                            <span id="timer-display" class="text-7xl font-extrabold tracking-tighter tabular-nums">25:00</span>
+                            <span id="timer-display" class="text-7xl font-extrabold tracking-tighter tabular-nums transition-all">25:00</span>
                             <span id="timer-status" class="text-xs font-bold uppercase tracking-[0.2em] mt-2 text-muted">Ready</span>
                         </div>
                     </div>
@@ -182,11 +195,6 @@
                             <i data-lucide="play" class="w-5 h-5 fill-current"></i> Start
                         </button>
                     </div>
-                </div>
-                <div class="flex justify-center gap-2 mb-8">
-                    <button id="mode-work" class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-full border border-main bg-main text-body">Focus</button>
-                    <button id="mode-short" class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-full border border-transparent text-muted hover:border-border">Short</button>
-                    <button id="mode-long" class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-full border border-transparent text-muted hover:border-border">Long</button>
                 </div>
             </section>
 
