@@ -1,4 +1,4 @@
-/* notifications.js - S1N Industrial Theme Update */
+/* notifications.js - S1N Industrial Theme Update (Settings Aware) */
 
 // --- STATE ---
 let notificationHistory = JSON.parse(localStorage.getItem('auraNotificationHistory')) || [];
@@ -8,33 +8,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const container = document.createElement('div');
     container.id = 'notification-container';
     // Position: Top Center, z-index high
-    container.className = 'fixed top-6 left-0 right-0 z-[200] flex flex-col items-center gap-2 pointer-events-none px-4';
+    container.className = 'fixed top-6 left-0 right-0 z-[400] flex flex-col items-center gap-2 pointer-events-none px-4';
     document.body.appendChild(container);
 });
 
 // --- MAIN SHOW FUNCTION ---
 window.showNotification = function(title, message, type = 'info') {
+    // 1. CHECK SETTINGS (NEW)
+    // If global settings exist and notifications are disabled, stop here.
+    if (window.appSettings && window.appSettings.notifications === false) {
+        return;
+    }
+
     const container = document.getElementById('notification-container');
     if (!container) return;
 
-    // 1. Save to History
+    // 2. Save to History (We still log it even if muted? Optionally yes, but for now let's log everything)
     saveToHistory(title, message, type);
 
-    // 2. Create Element
+    // 3. Create Element
     const notif = document.createElement('div');
     
-    // Industrial Styling: Black (or White in dark mode) background, sharp borders
-    // We use the 'card' variable for background to adapt to theme, but usually toasts need high contrast.
-    // Let's make them stand out: Solid Black in Light Mode, Solid White in Dark Mode (Inverse of body)
-    
     let iconName = 'bell';
-    
     if (type === 'success') iconName = 'check';
     if (type === 'warning') iconName = 'alert-triangle';
 
     notif.className = `pointer-events-auto relative w-full max-w-sm p-4 bg-main text-body rounded-lg shadow-2xl flex gap-4 items-start transform transition-all cursor-pointer animate-slide-in-top`;
     
-    // Inverting colors: bg-main is black in light mode.
     notif.innerHTML = `
         <div class="mt-0.5">
             <i data-lucide="${iconName}" class="w-5 h-5"></i>
@@ -48,15 +48,15 @@ window.showNotification = function(title, message, type = 'info') {
     container.appendChild(notif);
     if (window.lucide) lucide.createIcons();
 
-    // 3. Audio (Mechanical Click/Chime)
+    // 4. Audio (Mechanical Click/Chime)
     const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2345/2345-preview.mp3'); 
     audio.volume = 0.2;
     audio.play().catch(()=>{});
 
-    // 4. Swipe/Click to Dismiss
+    // 5. Swipe/Click to Dismiss
     notif.addEventListener('click', () => dismissNotification(notif));
 
-    // 5. Auto Remove (3 Seconds)
+    // 6. Auto Remove (3 Seconds)
     let removeTimeout = setTimeout(() => {
         dismissNotification(notif);
     }, 3000);
@@ -64,7 +64,6 @@ window.showNotification = function(title, message, type = 'info') {
 
 function dismissNotification(el) {
     if(!el) return;
-    // Slide out animation
     el.style.opacity = '0';
     el.style.transform = 'translateY(-20px) scale(0.95)';
     setTimeout(() => { if(el.parentNode) el.remove(); }, 300);
@@ -90,8 +89,8 @@ window.openNotificationHistory = function() {
     const modal = document.getElementById('notification-history-modal');
     const list = document.getElementById('notification-history-list');
     
-    // Close settings if open
-    if(window.closeSettings) window.closeSettings();
+    // Close settings if open (Settings overlay is now separate, so we might keep this or remove it)
+    if(window.closeFullSettings) window.closeFullSettings();
     
     if(modal) modal.classList.remove('hidden');
     if(!list) return;
@@ -112,7 +111,6 @@ window.openNotificationHistory = function() {
             if (item.type === 'warning') iconName = 'alert-triangle';
 
             const div = document.createElement('div');
-            // List Item Style
             div.className = "flex gap-3 p-3 border-b border-border last:border-0";
             div.innerHTML = `
                 <div class="mt-0.5 text-main">

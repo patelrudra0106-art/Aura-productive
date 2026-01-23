@@ -1,4 +1,4 @@
-/* profile.js - S1N Industrial Theme Update (With Data Export) */
+/* profile.js - S1N Identity Management (Settings Integrated) */
 
 // --- STATE ---
 let userProfile = JSON.parse(localStorage.getItem('auraProfile')) || {
@@ -18,7 +18,6 @@ let userProfile = JSON.parse(localStorage.getItem('auraProfile')) || {
     const savedMonth = userProfile.lastActiveMonth || "";
     let hasChanged = false;
 
-    // Monthly Reset (For League)
     if (savedMonth !== currentMonth) {
         userProfile.monthlyPoints = 0;
         userProfile.lastActiveMonth = currentMonth;
@@ -48,14 +47,10 @@ window.addPoints = function(amount, reason) {
     userProfile.monthlyPoints = (userProfile.monthlyPoints || 0) + amount;
 
     saveProfile();
-    
-    // --- TRIGGER ACHIEVEMENT CHECK ---
     if(window.checkAchievements) window.checkAchievements();
-    
     updateProfileUI();
     
     if(window.syncUserToDB) window.syncUserToDB(userProfile.points, userProfile.streak, userProfile.monthlyPoints, userProfile.lastActiveMonth);
-    
     if(amount > 0 && window.showNotification) window.showNotification(`CREDITS +${amount}`, reason, 'success');
 };
 
@@ -75,10 +70,7 @@ window.updateStreak = function() {
 
     userProfile.lastTaskDate = today;
     saveProfile();
-    
-    // --- TRIGGER ACHIEVEMENT CHECK ---
     if(window.checkAchievements) window.checkAchievements();
-
     updateProfileUI();
     
     if(window.syncUserToDB) window.syncUserToDB(userProfile.points, userProfile.streak, userProfile.monthlyPoints, userProfile.lastActiveMonth);
@@ -96,44 +88,35 @@ function updateProfileUI() {
 
     renderProfileBadges();
     
-    // --- RENDER ACHIEVEMENTS ---
     if(window.renderAchievementsList) window.renderAchievementsList('profile-achievements');
 }
 
-// --- BADGE RENDERING (Fixed Grid Layout) ---
+// --- BADGE RENDERING ---
 function renderProfileBadges() {
     const user = JSON.parse(localStorage.getItem('auraUser'));
     const inventory = (user && user.inventory) ? user.inventory : [];
     
-    // Target the specific container ID we added in index.html
     const badgeContainer = document.getElementById('profile-badges');
     if (!badgeContainer) return;
 
     if (inventory.length === 0) {
         badgeContainer.innerHTML = '';
-        badgeContainer.className = 'hidden'; // Hide container if empty to save space
+        badgeContainer.className = 'hidden'; 
         return;
     }
 
-    // Force Grid Layout: 5 columns, centered items
     badgeContainer.className = "grid grid-cols-5 gap-2 mb-4 justify-items-center";
 
-    // Icon Lookup
     const badgeMap = {
-        'badge_crown': 'crown', 
-        'badge_star': 'star', 
-        'badge_fire': 'flame', 
-        'badge_zap': 'zap', 
-        'theme_emerald': 'leaf'
+        'badge_crown': 'crown', 'badge_star': 'star', 'badge_fire': 'flame', 
+        'badge_zap': 'zap', 'theme_emerald': 'leaf'
     };
 
     badgeContainer.innerHTML = '';
     
     inventory.forEach(itemId => {
         const icon = badgeMap[itemId] || 'award';
-        
         const badge = document.createElement('div');
-        // Fixed square size (w-10 h-10) to prevent full-width stacking
         badge.className = `w-10 h-10 flex items-center justify-center rounded-lg border border-border text-muted hover:text-main hover:border-main transition-colors cursor-help bg-card`;
         badge.title = itemId;
         badge.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5"></i>`;
@@ -143,25 +126,10 @@ function renderProfileBadges() {
     if(window.lucide) lucide.createIcons();
 }
 
-// --- MODAL CONTROLS ---
+// --- MODAL CONTROLS (Simplfied) ---
 window.openAccount = function() {
     const modal = document.getElementById('account-modal');
     if(modal) {
-        // --- DYNAMICALLY INJECT EXPORT BUTTON IF MISSING ---
-        // This ensures the button appears without editing index.html
-        const passBtn = document.querySelector('button[onclick="toggleChangePass()"]');
-        if (passBtn && passBtn.parentNode && !document.getElementById('btn-export-data')) {
-            const exportBtn = document.createElement('button');
-            exportBtn.id = 'btn-export-data';
-            exportBtn.className = "w-full py-2.5 mb-2 border border-border rounded-xl text-xs font-bold uppercase tracking-wide hover:bg-input transition-colors text-main";
-            exportBtn.innerHTML = '<span class="flex items-center justify-center gap-2"><i data-lucide="download" class="w-3 h-3"></i> Backup Data</span>';
-            exportBtn.onclick = window.exportUserData;
-            
-            // Insert before the Change Password button
-            passBtn.parentNode.insertBefore(exportBtn, passBtn);
-            if(window.lucide) lucide.createIcons();
-        }
-
         modal.classList.remove('hidden');
         updateProfileUI();
     }
@@ -169,13 +137,10 @@ window.openAccount = function() {
 
 window.closeAccount = function() {
     const modal = document.getElementById('account-modal');
-    const passForm = document.getElementById('change-pass-form');
-    // Hide password form when closing to reset state
-    if(passForm) passForm.classList.add('hidden');
     if(modal) modal.classList.add('hidden');
 };
 
-// --- DATA EXPORT (OPTION C) ---
+// --- DATA EXPORT (Used by Settings) ---
 window.exportUserData = function() {
     const user = JSON.parse(localStorage.getItem('auraUser'));
     if (!user) return alert("No identity found.");
@@ -200,18 +165,19 @@ window.exportUserData = function() {
     const downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute("href", dataStr);
     downloadAnchorNode.setAttribute("download", `S1N_BACKUP_${user.name}_${new Date().toISOString().slice(0,10)}.json`);
-    document.body.appendChild(downloadAnchorNode); // required for firefox
+    document.body.appendChild(downloadAnchorNode); 
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
 
     if(window.showNotification) window.showNotification("Backup Complete", "Data package downloaded.", "success");
 };
 
-// --- PASSWORD RESET LOGIC ---
+// --- PASSWORD MANAGEMENT (Used by Settings) ---
 window.toggleChangePass = function() {
     const form = document.getElementById('change-pass-form');
     if(form) {
         form.classList.toggle('hidden');
+        // Clear fields on toggle
         const old = document.getElementById('cp-old');
         const newP = document.getElementById('cp-new');
         if(old) old.value = '';
@@ -263,7 +229,6 @@ window.submitChangePass = async function() {
     }
 };
 
-// Init
 document.addEventListener('DOMContentLoaded', () => {
     updateProfileUI();
 });

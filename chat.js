@@ -1,16 +1,14 @@
-/* chat.js - S1N Real-time Messaging & Notifications */
+/* chat.js - S1N Real-time Messaging (Time Format Aware) */
 
 let currentChatFriend = null;
 let chatListener = null;
 let notificationListeners = [];
 
 // --- 1. NOTIFICATION SYSTEM (Background Listener) ---
-// This runs on startup/login to listen for messages from ALL friends
 window.initChatNotifications = function() {
     const user = JSON.parse(localStorage.getItem('auraUser'));
     if (!user || !user.friends) return;
 
-    // Clear existing listeners to avoid duplicates
     notificationListeners.forEach(off => off());
     notificationListeners = [];
 
@@ -22,9 +20,6 @@ window.initChatNotifications = function() {
             const msg = snapshot.val();
             if (!msg) return;
 
-            // Check if message is new (received after login/refresh)
-            // and NOT from myself, and I am NOT currently looking at this chat
-            // We use a 5-second buffer to prevent alerts for old messages on page load
             const isNew = (Date.now() - msg.timestamp) < 5000; 
             
             if (isNew && msg.sender !== user.name && currentChatFriend !== friendName) {
@@ -33,15 +28,12 @@ window.initChatNotifications = function() {
                 }
             }
         });
-        
-        // Store the off function to clean up later if needed
         notificationListeners.push(() => ref.off('child_added', listener));
     });
 };
 
 // --- 2. CHAT UI LOGIC ---
 
-// Helper: Generate unique ID for two users (Alphabetical order ensures same ID for both)
 function getChatId(userA, userB) {
     return [userA, userB].sort().join('_');
 }
@@ -50,13 +42,11 @@ window.openChat = function(friendName) {
     const user = JSON.parse(localStorage.getItem('auraUser'));
     if (!user) return alert("Login required.");
 
-    // Close Friend Profile if open
     const friendModal = document.getElementById('friend-modal');
     if (friendModal) friendModal.classList.add('hidden');
 
     currentChatFriend = friendName;
     
-    // UI Setup
     const modal = document.getElementById('chat-modal');
     const title = document.getElementById('chat-title');
     const messagesBox = document.getElementById('chat-messages');
@@ -66,9 +56,7 @@ window.openChat = function(friendName) {
     if (title) title.textContent = friendName;
     if (messagesBox) messagesBox.innerHTML = '<div class="text-center py-4 opacity-50"><i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto"></i></div>';
     
-    // Auto focus input
     if (input) setTimeout(() => input.focus(), 100);
-    
     if(window.lucide) lucide.createIcons();
 
     loadChatHistory(user.name, friendName);
@@ -78,7 +66,6 @@ window.closeChat = function() {
     const modal = document.getElementById('chat-modal');
     if (modal) modal.classList.add('hidden');
     
-    // Detach listener for the specific chat window
     if (chatListener && currentChatFriend) {
         const user = JSON.parse(localStorage.getItem('auraUser'));
         if (user) {
@@ -86,7 +73,6 @@ window.closeChat = function() {
             firebase.database().ref(`chats/${chatId}/messages`).off('value', chatListener);
         }
     }
-    
     currentChatFriend = null;
 };
 
@@ -94,10 +80,8 @@ function loadChatHistory(myName, friendName) {
     const chatId = getChatId(myName, friendName);
     const messagesBox = document.getElementById('chat-messages');
     
-    // Load last 50 messages
     const dbRef = firebase.database().ref(`chats/${chatId}/messages`).limitToLast(50);
 
-    // Real-time Listener for the open chat window
     chatListener = dbRef.on('value', (snapshot) => {
         if (!messagesBox) return;
         messagesBox.innerHTML = '';
@@ -111,7 +95,6 @@ function loadChatHistory(myName, friendName) {
         Object.values(data).forEach(msg => {
             const isMe = msg.sender === myName;
             
-            // Message Bubble Style
             const div = document.createElement('div');
             div.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'} mb-3 animate-fade-in`;
             
@@ -119,9 +102,16 @@ function loadChatHistory(myName, friendName) {
                 ? 'bg-main text-body rounded-tr-sm' 
                 : 'bg-input text-main border border-border rounded-tl-sm';
 
-            // Format Time
+            // FORMAT TIME (New Logic)
             const date = new Date(msg.timestamp);
-            const timeStr = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            let timeStr;
+            
+            // Check Global Settings
+            if (window.appSettings && window.appSettings.timeFormat === '24h') {
+                timeStr = date.toLocaleTimeString([], {hour12: false, hour: '2-digit', minute:'2-digit'});
+            } else {
+                timeStr = date.toLocaleTimeString([], {hour12: true, hour: '2-digit', minute:'2-digit'});
+            }
 
             div.innerHTML = `
                 <div class="${bubbleClass} px-4 py-2 rounded-xl max-w-[80%] text-sm font-medium shadow-sm break-words">
@@ -134,7 +124,6 @@ function loadChatHistory(myName, friendName) {
             messagesBox.appendChild(div);
         });
 
-        // Auto-scroll to bottom
         messagesBox.scrollTop = messagesBox.scrollHeight;
     });
 }
@@ -158,13 +147,11 @@ window.sendChatMessage = function() {
 
     input.value = '';
     
-    // Play subtle sound (using same SFX as notification for consistency, or different if preferred)
     const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2345/2345-preview.mp3'); 
     audio.volume = 0.1;
     audio.play().catch(()=>{});
 };
 
-// Handle "Enter" key in chat input and Init
 document.addEventListener('DOMContentLoaded', () => {
     const input = document.getElementById('chat-input');
     if(input) {
@@ -173,8 +160,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Initialize background listeners if user is already logged in
-    // Small delay to ensure firebase is ready
     setTimeout(() => {
         if(window.initChatNotifications) window.initChatNotifications();
     }, 2000); 

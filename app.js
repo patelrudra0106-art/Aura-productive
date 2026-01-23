@@ -1,4 +1,12 @@
-/* app.js - S1N Global Logic & Theme System */
+/* app.js - S1N Global Logic & Theme System (Command Center Update) */
+
+// --- GLOBAL SETTINGS STATE ---
+window.appSettings = {
+    theme: 'light',
+    timeFormat: '12h',
+    notifications: true,
+    language: 'en'
+};
 
 // --- THEME CONTROL ---
 window.setTheme = function(mode) {
@@ -13,46 +21,167 @@ window.setTheme = function(mode) {
     }
 
     // 2. Save Preference
-    localStorage.setItem('auraTheme', mode);
+    window.appSettings.theme = mode;
+    saveAppSettings();
 
     // 3. Update Button Visuals (Solid Black/White for active)
     if (btnLight && btnDark) {
         if (mode === 'dark') {
-            // Dark Mode Active: Dark button is solid, Light is transparent
-            btnDark.className = "flex-1 py-2 text-xs font-bold uppercase transition-colors bg-main text-body";
-            btnLight.className = "flex-1 py-2 text-xs font-bold uppercase transition-colors bg-transparent text-muted hover:text-main";
+            btnDark.className = "px-3 py-1 text-[10px] font-bold rounded-md transition-all bg-main text-body shadow-sm";
+            btnLight.className = "px-3 py-1 text-[10px] font-bold rounded-md transition-all bg-transparent text-muted hover:text-main";
         } else {
-            // Light Mode Active: Light button is solid, Dark is transparent
-            btnLight.className = "flex-1 py-2 text-xs font-bold uppercase transition-colors bg-main text-body";
-            btnDark.className = "flex-1 py-2 text-xs font-bold uppercase transition-colors bg-transparent text-muted hover:text-main";
+            btnLight.className = "px-3 py-1 text-[10px] font-bold rounded-md transition-all bg-main text-body shadow-sm";
+            btnDark.className = "px-3 py-1 text-[10px] font-bold rounded-md transition-all bg-transparent text-muted hover:text-main";
         }
     }
     
-    // Optional: Play Click Sound
-    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3'); 
-    audio.volume = 0.1;
-    audio.play().catch(()=>{});
+    // Audio Feedback
+    playClickSound();
 };
 
+// --- SETTINGS LOGIC (NEW) ---
+
+window.openFullSettings = function() {
+    const overlay = document.getElementById('settings-overlay');
+    const usernameDisplay = document.getElementById('settings-username');
+    
+    // 1. Load User Identity
+    const user = JSON.parse(localStorage.getItem('auraUser'));
+    if (usernameDisplay) {
+        usernameDisplay.textContent = user ? user.name : 'Guest Agent';
+    }
+
+    // 2. Load Timer Values
+    const timerSettings = JSON.parse(localStorage.getItem('auraTimerSettings')) || { work: 25, short: 5, long: 15 };
+    const inFocus = document.getElementById('setting-focus');
+    const inShort = document.getElementById('setting-short');
+    const inLong = document.getElementById('setting-long');
+    
+    if(inFocus) inFocus.value = timerSettings.work;
+    if(inShort) inShort.value = timerSettings.short;
+    if(inLong) inLong.value = timerSettings.long;
+
+    // 3. Sync UI with Current State
+    syncSettingsUI();
+
+    // 4. Show Overlay
+    if (overlay) overlay.classList.remove('hidden');
+};
+
+window.closeFullSettings = function() {
+    const overlay = document.getElementById('settings-overlay');
+    // Close password accordion if open
+    const passForm = document.getElementById('change-pass-form');
+    if(passForm) passForm.classList.add('hidden');
+    
+    if (overlay) overlay.classList.add('hidden');
+};
+
+// Toggle 12h / 24h
+window.setTimeFormat = function(fmt) {
+    window.appSettings.timeFormat = fmt;
+    saveAppSettings();
+    syncSettingsUI();
+    // Reload tasks to reflect new time format
+    if(window.loadTasks) window.loadTasks(); 
+};
+
+// Toggle Notifications
+window.toggleNotifications = function() {
+    window.appSettings.notifications = !window.appSettings.notifications;
+    saveAppSettings();
+    syncSettingsUI();
+};
+
+// Update Language
+window.updateGeneralSettings = function() {
+    const langSelect = document.getElementById('setting-lang');
+    if(langSelect) {
+        window.appSettings.language = langSelect.value;
+        saveAppSettings();
+    }
+};
+
+// Auto-Save Timer Settings (Called on input change)
+window.saveTimerSettings = function() {
+    const newWork = parseInt(document.getElementById('setting-focus').value) || 25;
+    const newShort = parseInt(document.getElementById('setting-short').value) || 5;
+    const newLong = parseInt(document.getElementById('setting-long').value) || 15;
+    
+    const settings = { work: newWork, short: newShort, long: newLong };
+    localStorage.setItem('auraTimerSettings', JSON.stringify(settings));
+    
+    // Notify Pomodoro Module
+    if(window.refreshTimerSettings) window.refreshTimerSettings();
+};
+
+// Helper: Update all visual toggles/buttons based on state
+function syncSettingsUI() {
+    // 1. Time Format Buttons
+    const btn12 = document.getElementById('btn-12h');
+    const btn24 = document.getElementById('btn-24h');
+    if(btn12 && btn24) {
+        if(window.appSettings.timeFormat === '24h') {
+            btn24.className = "px-3 py-1 text-[10px] font-bold rounded-md transition-all bg-main text-body shadow-sm";
+            btn12.className = "px-3 py-1 text-[10px] font-bold rounded-md transition-all bg-transparent text-muted hover:text-main";
+        } else {
+            btn12.className = "px-3 py-1 text-[10px] font-bold rounded-md transition-all bg-main text-body shadow-sm";
+            btn24.className = "px-3 py-1 text-[10px] font-bold rounded-md transition-all bg-transparent text-muted hover:text-main";
+        }
+    }
+
+    // 2. Notification Toggle Knob
+    const knob = document.getElementById('knob-notif');
+    const toggleBtn = document.getElementById('btn-notif-toggle');
+    if(knob && toggleBtn) {
+        if(window.appSettings.notifications) {
+            toggleBtn.className = "w-10 h-5 rounded-full bg-main relative transition-colors";
+            knob.style.transform = "translateX(20px)";
+        } else {
+            toggleBtn.className = "w-10 h-5 rounded-full bg-border relative transition-colors";
+            knob.style.transform = "translateX(0px)";
+        }
+    }
+
+    // 3. Language Select
+    const langSelect = document.getElementById('setting-lang');
+    if(langSelect) langSelect.value = window.appSettings.language;
+
+    // 4. Theme Buttons
+    // (Re-run setTheme visuals just in case)
+    window.setTheme(window.appSettings.theme);
+}
+
+function saveAppSettings() {
+    localStorage.setItem('s1nSettings', JSON.stringify(window.appSettings));
+}
+
+function loadAppSettings() {
+    const saved = JSON.parse(localStorage.getItem('s1nSettings'));
+    if(saved) {
+        window.appSettings = { ...window.appSettings, ...saved };
+    } else {
+        // Migration: Check old 'auraTheme'
+        const oldTheme = localStorage.getItem('auraTheme');
+        if(oldTheme) window.appSettings.theme = oldTheme;
+    }
+}
+
 // --- JUICE SYSTEM (Visual Feedback) ---
-// Used by Shop, Achievements, and Tasks to create "pop" effects
 window.triggerJuice = function(element, points) {
     if (!element) return;
 
-    // 1. Shake Animation (requires .animate-shake in style.css)
+    // 1. Shake Animation
     element.classList.remove('animate-shake');
-    void element.offsetWidth; // Force browser reflow to restart animation
+    void element.offsetWidth; 
     element.classList.add('animate-shake');
 
     // 2. Flash Effect
     const flash = document.createElement('div');
     flash.className = "absolute inset-0 bg-main opacity-20 rounded-xl pointer-events-none z-10 transition-opacity duration-300";
     
-    // Ensure parent is relative so flash sits inside
     const style = window.getComputedStyle(element);
-    if(style.position === 'static') {
-        element.style.position = 'relative'; 
-    }
+    if(style.position === 'static') element.style.position = 'relative'; 
     
     element.appendChild(flash);
     setTimeout(() => {
@@ -64,11 +193,9 @@ window.triggerJuice = function(element, points) {
     if (points > 0) {
         const rect = element.getBoundingClientRect();
         const popup = document.createElement('div');
-        popup.className = "xp-popup"; // Requires .xp-popup in style.css
+        popup.className = "xp-popup"; 
         popup.textContent = `+${points}`;
         
-        // Position centered above the element
-        // We use 'fixed' positioning to ensure it floats over everything
         popup.style.position = 'fixed';
         popup.style.left = `${rect.left + rect.width / 2}px`;
         popup.style.top = `${rect.top}px`;
@@ -78,20 +205,30 @@ window.triggerJuice = function(element, points) {
     }
 };
 
+function playClickSound() {
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3'); 
+    audio.volume = 0.1;
+    audio.play().catch(()=>{});
+}
+
 // --- GLOBAL INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Initialize Theme on Load
-    // Check LocalStorage -> System Preference -> Default to Light
-    const savedTheme = localStorage.getItem('auraTheme') || 
-        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    
-    // Apply immediately
-    window.setTheme(savedTheme);
+    // 1. Load Settings
+    loadAppSettings();
 
-    // 2. PWA Install Prompt Handler (Optional)
+    // 2. Apply Theme
+    // Check LocalStorage -> System Preference -> Default to Light
+    if(!localStorage.getItem('s1nSettings') && !localStorage.getItem('auraTheme')) {
+        // First run detection
+        if(window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            window.appSettings.theme = 'dark';
+        }
+    }
+    window.setTheme(window.appSettings.theme);
+
+    // 3. PWA Install Prompt Handler
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         window.deferredPrompt = e;
-        // You can show a custom "Install App" button here if desired
     });
 });

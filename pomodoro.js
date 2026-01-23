@@ -1,4 +1,4 @@
-/* pomodoro.js - S1N Industrial Theme (Layout Update) */
+/* pomodoro.js - S1N Industrial Theme (Settings Integrated) */
 
 // --- POMODORO CONFIG ---
 let settings = JSON.parse(localStorage.getItem('auraTimerSettings')) || {
@@ -12,7 +12,24 @@ let MODES = {
     work: { time: settings.work * 60, label: 'FOCUS PROTOCOL' },
     short: { time: settings.short * 60, label: 'SHORT RECHARGE' },
     long: { time: settings.long * 60, label: 'LONG RECHARGE' },
-    stopwatch: { time: 0, label: 'FLOW STATE' } // Time 0 = Infinite start
+    stopwatch: { time: 0, label: 'FLOW STATE' }
+};
+
+// --- SETTINGS HOT-RELOAD (NEW) ---
+window.refreshTimerSettings = function() {
+    settings = JSON.parse(localStorage.getItem('auraTimerSettings')) || { work: 25, short: 5, long: 15 };
+    
+    // Update Mode Definitions
+    MODES.work.time = settings.work * 60;
+    MODES.short.time = settings.short * 60;
+    MODES.long.time = settings.long * 60;
+
+    // If timer is NOT running and we are in a standard mode, update display immediately
+    // This gives instant visual feedback when changing settings
+    if (!isRunning && currentMode !== 'stopwatch') {
+        timeLeft = MODES[currentMode].time;
+        updateDisplay();
+    }
 };
 
 // --- SOUNDS SYSTEM ---
@@ -44,7 +61,6 @@ const subModesContainer = document.getElementById('timer-submodes');
 const switchPomodoro = document.getElementById('switch-pomodoro');
 const switchStopwatch = document.getElementById('switch-stopwatch');
 
-// Dynamic Mode Buttons
 const modeBtns = {
     work: document.getElementById('mode-work'),
     short: document.getElementById('mode-short'),
@@ -62,17 +78,14 @@ function initPomodoro() {
         progressRing.style.strokeDashoffset = 0;
     }
     
-    // Check if we switched settings, refresh mode times
-    MODES.work.time = settings.work * 60;
-    MODES.short.time = settings.short * 60;
-    MODES.long.time = settings.long * 60;
+    // Refresh settings on init
+    window.refreshTimerSettings();
 
     updateDisplay();
     renderHistory();
     setupModeListeners();
     setupSoundSystem();
     
-    // Default Visual State
     updateLayoutState(currentMode);
 }
 
@@ -149,21 +162,16 @@ function updateDisplay() {
     
     let displayStr = "";
     
-    // FORMATTING: Handle HH:MM:SS for Stopwatch (Flow Mode)
     if (currentMode === 'stopwatch' && timeLeft >= 3600) {
         const h = Math.floor(timeLeft / 3600).toString().padStart(2, '0');
         const m = Math.floor((timeLeft % 3600) / 60).toString().padStart(2, '0');
         const s = (timeLeft % 60).toString().padStart(2, '0');
         displayStr = `${h}:${m}:${s}`;
-        
-        // Adjust font size for longer string
         timerDisplay.classList.replace('text-7xl', 'text-5xl');
     } else {
         const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
         const s = (timeLeft % 60).toString().padStart(2, '0');
         displayStr = `${m}:${s}`;
-        
-        // Reset font size
         timerDisplay.classList.replace('text-5xl', 'text-7xl');
     }
 
@@ -172,22 +180,18 @@ function updateDisplay() {
     // RING LOGIC
     if(progressRing) {
         if (currentMode === 'stopwatch') {
-            // Pulse Effect: Complete a circle every 60 seconds
             const secondsInMinute = timeLeft % 60;
             const offset = CIRCLE_CIRCUMFERENCE - (secondsInMinute / 60) * CIRCLE_CIRCUMFERENCE;
             progressRing.style.strokeDashoffset = offset;
         } else {
-            // Standard Countdown Logic
             const totalTime = MODES[currentMode].time;
             const offset = CIRCLE_CIRCUMFERENCE - (timeLeft / totalTime) * CIRCLE_CIRCUMFERENCE;
             progressRing.style.strokeDashoffset = offset;
         }
     }
     
-    // Update Tab Title
     document.title = isRunning ? `[${displayStr}] ${MODES[currentMode].label}` : 'S1N.';
     
-    // BUTTON LOGIC
     if(currentMode === 'stopwatch' && timeLeft > 0) {
         resetBtn.innerHTML = '<i data-lucide="check" class="w-5 h-5 text-main"></i>';
         resetBtn.title = "Finish & Save";
@@ -215,11 +219,9 @@ function startTimer() {
     
     timerInterval = setInterval(() => {
         if (currentMode === 'stopwatch') {
-            // COUNT UP
             timeLeft++;
             updateDisplay();
         } else {
-            // COUNT DOWN
             if (timeLeft > 0) {
                 timeLeft--;
                 updateDisplay();
@@ -250,7 +252,8 @@ function resetTimer() {
     if (currentMode === 'stopwatch' && timeLeft > 60) {
         completeStopwatchSession();
     } else {
-        // Hard Reset
+        // Refresh settings here just in case they were changed in background
+        window.refreshTimerSettings(); 
         timeLeft = MODES[currentMode].time;
         timerStatus.textContent = 'READY';
         updateDisplay();
@@ -283,7 +286,7 @@ function completeTimer() {
             window.showNotification("BREAK OVER", "Return to focus.", "success"); 
         }
         timerStatus.textContent = 'READY';
-        timeLeft = MODES[currentMode].time; // Auto-reset break
+        timeLeft = MODES[currentMode].time; 
         updateDisplay();
     }
 }
@@ -316,9 +319,7 @@ function finishSessionLogic(minutes, points, label) {
 
 // --- LAYOUT & MODE HELPERS ---
 
-// Updates the visual appearance of the top toggles and sub-menu visibility
 function updateLayoutState(mode) {
-    // 1. Top Toggle Visuals
     const activeClass = "flex-1 py-2 text-xs font-bold uppercase rounded-lg bg-card shadow-sm text-main transition-all";
     const inactiveClass = "flex-1 py-2 text-xs font-bold uppercase rounded-lg text-muted hover:text-main transition-all";
 
@@ -326,23 +327,18 @@ function updateLayoutState(mode) {
         if(switchPomodoro) switchPomodoro.className = inactiveClass;
         if(switchStopwatch) switchStopwatch.className = activeClass;
         
-        // Hide Sub-buttons
         if(subModesContainer) {
             subModesContainer.classList.add('opacity-50', 'pointer-events-none');
-            // Alternatively use 'hidden' if you want them to vanish completely
-            // subModesContainer.classList.add('hidden');
         }
     } else {
         if(switchPomodoro) switchPomodoro.className = activeClass;
         if(switchStopwatch) switchStopwatch.className = inactiveClass;
         
-        // Show Sub-buttons
         if(subModesContainer) {
             subModesContainer.classList.remove('opacity-50', 'pointer-events-none', 'hidden');
         }
     }
 
-    // 2. Sub-Button Visuals
     Object.keys(modeBtns).forEach(k => {
         const btn = modeBtns[k];
         if(!btn) return;
@@ -364,50 +360,15 @@ function setMode(mode) {
 }
 
 function setupModeListeners() {
-    // Top Toggles
     if(switchPomodoro) switchPomodoro.addEventListener('click', () => setMode('work'));
     if(switchStopwatch) switchStopwatch.addEventListener('click', () => setMode('stopwatch'));
 
-    // Sub-modes
     if(modeBtns.work) modeBtns.work.addEventListener('click', () => setMode('work'));
     if(modeBtns.short) modeBtns.short.addEventListener('click', () => setMode('short'));
     if(modeBtns.long) modeBtns.long.addEventListener('click', () => setMode('long'));
 }
 
-// --- SETTINGS & HISTORY (Helpers) ---
-
-window.openSettings = function() {
-    const modal = document.getElementById('settings-modal');
-    if(modal) {
-        modal.classList.remove('hidden');
-        document.getElementById('setting-focus').value = settings.work;
-        document.getElementById('setting-short').value = settings.short;
-        document.getElementById('setting-long').value = settings.long;
-    }
-};
-
-window.closeSettings = function() {
-    document.getElementById('settings-modal').classList.add('hidden');
-};
-
-window.saveSettings = function() {
-    const newWork = parseInt(document.getElementById('setting-focus').value) || 25;
-    const newShort = parseInt(document.getElementById('setting-short').value) || 5;
-    const newLong = parseInt(document.getElementById('setting-long').value) || 15;
-    
-    settings = { work: newWork, short: newShort, long: newLong };
-    localStorage.setItem('auraTimerSettings', JSON.stringify(settings));
-    
-    MODES.work.time = newWork * 60;
-    MODES.short.time = newShort * 60;
-    MODES.long.time = newLong * 60;
-    
-    if(currentMode !== 'stopwatch') {
-        timeLeft = MODES[currentMode].time;
-        updateDisplay();
-    }
-    closeSettings();
-};
+// --- SETTINGS & HISTORY ---
 
 window.setFocusTask = function(taskText) {
     currentFocusTask = taskText;
@@ -505,6 +466,5 @@ window.clearHistory = function() {
 if(toggleBtn) toggleBtn.addEventListener('click', () => isRunning ? pauseTimer() : startTimer());
 if(resetBtn) resetBtn.addEventListener('click', resetTimer);
 
-// Init
 if(document.readyState === 'complete') initPomodoro();
 else document.addEventListener('DOMContentLoaded', initPomodoro);

@@ -160,7 +160,6 @@ window.loadAdminPanel = function(filter = '') {
         `;
         list.insertAdjacentHTML('beforeend', dashboardHTML);
 
-        // Load Sounds
         loadAdminSounds();
 
         if (users.length === 0) {
@@ -477,7 +476,7 @@ window.handleAuth = async function(e) {
             await userRef.set(newUser);
             loginUser(newUser);
 
-            // --- TRIGGER ONBOARDING (NEW) ---
+            // --- TRIGGER ONBOARDING ---
             setTimeout(() => {
                 if(window.startOnboarding) window.startOnboarding();
             }, 500); 
