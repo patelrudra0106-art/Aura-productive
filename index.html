@@ -29,6 +29,7 @@
                         'slide-in-top': 'slideInTop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                         'rgb-border': 'rgbBorder 3s linear infinite',
                         'shake': 'shake 0.4s cubic-bezier(.36,.07,.19,.97) both',
+                        // Note: textReveal is defined in style.css
                     }
                 }
             }
@@ -36,7 +37,7 @@
     </script>
     
     <script>
-        // Init Theme immediately
+        // Init Theme immediately to prevent flash
         if (localStorage.getItem('auraTheme') === 'dark' || 
            (!('auraTheme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
@@ -55,7 +56,8 @@
         <div class="w-full max-w-sm animate-fade-in">
             <div class="mb-8 text-center">
                 <h1 class="text-3xl font-extrabold tracking-tighter leading-tight mb-2">
-                    S1N<br>PRODUCTIVE.
+                    <span class="animate-title stagger-1 inline-block">S1N</span><br>
+                    <span class="animate-title stagger-2 inline-block">PRODUCTIVE.</span>
                 </h1>
             </div>
             
@@ -89,171 +91,21 @@
         </div>
     </div>
 
-    <div id="settings-overlay" class="hidden fixed inset-0 z-[300] bg-body animate-slide-in-top flex flex-col">
-        <div class="px-6 py-4 border-b border-border bg-body/95 backdrop-blur sticky top-0 z-10 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg border border-border flex items-center justify-center bg-card">
-                    <i data-lucide="sliders" class="w-4 h-4 text-main"></i>
-                </div>
-                <div>
-                    <h2 class="text-sm font-bold uppercase tracking-wider leading-none">System Config</h2>
-                    <p class="text-[10px] text-muted font-bold uppercase tracking-widest mt-1">Control Panel</p>
-                </div>
-            </div>
-            <button onclick="closeFullSettings()" class="w-8 h-8 rounded-full hover:bg-input flex items-center justify-center transition-colors">
-                <i data-lucide="x" class="w-5 h-5"></i>
-            </button>
-        </div>
-
-        <div class="flex-1 overflow-y-auto p-6 space-y-8 pb-24 scrollbar-hide max-w-lg mx-auto w-full">
-            
-            <section>
-                <h3 class="text-[10px] font-bold text-muted uppercase tracking-[0.2em] mb-3 ml-1">Account Protocols</h3>
-                <div class="card-s1n p-1 overflow-hidden">
-                    <div class="p-4 flex items-center justify-between border-b border-border">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-input border border-border flex items-center justify-center">
-                                <i data-lucide="user" class="w-5 h-5 text-muted"></i>
-                            </div>
-                            <div>
-                                <p id="settings-username" class="text-sm font-bold text-main">Agent</p>
-                                <p class="text-[10px] text-muted uppercase tracking-wider">Status: Active</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="border-b border-border">
-                        <button onclick="toggleChangePass()" class="w-full flex items-center justify-between p-4 hover:bg-input transition-colors text-left">
-                            <span class="text-xs font-bold uppercase tracking-wider text-main">Change Password</span>
-                            <i data-lucide="chevron-down" class="w-4 h-4 text-muted"></i>
-                        </button>
-                        <div id="change-pass-form" class="hidden bg-input p-4 border-t border-border space-y-3 animate-fade-in">
-                            <input type="password" id="cp-old" placeholder="Current Key" class="input-s1n py-2 text-xs bg-card">
-                            <input type="password" id="cp-new" placeholder="New Key" class="input-s1n py-2 text-xs bg-card">
-                            <button onclick="submitChangePass()" id="cp-btn" class="btn-s1n w-full py-2 text-xs">Update Credentials</button>
-                        </div>
-                    </div>
-
-                    <button onclick="exportUserData()" class="w-full flex items-center justify-between p-4 hover:bg-input transition-colors border-b border-border text-left">
-                        <span class="text-xs font-bold uppercase tracking-wider text-main">Backup Database</span>
-                        <i data-lucide="download" class="w-4 h-4 text-muted"></i>
-                    </button>
-
-                    <button onclick="logout()" class="w-full flex items-center justify-between p-4 hover:bg-rose-50 dark:hover:bg-rose-900/10 transition-colors border-b border-border text-left group">
-                        <span class="text-xs font-bold uppercase tracking-wider text-rose-500">Terminante Session</span>
-                        <i data-lucide="log-out" class="w-4 h-4 text-rose-300 group-hover:text-rose-500"></i>
-                    </button>
-                    <button onclick="deleteAccount()" class="w-full flex items-center justify-between p-4 hover:bg-rose-50 dark:hover:bg-rose-900/10 transition-colors text-left group">
-                        <span class="text-xs font-bold uppercase tracking-wider text-rose-500">Delete Identity</span>
-                        <i data-lucide="trash-2" class="w-4 h-4 text-rose-300 group-hover:text-rose-500"></i>
-                    </button>
-                </div>
-            </section>
-
-            <section>
-                <h3 class="text-[10px] font-bold text-muted uppercase tracking-[0.2em] mb-3 ml-1">General System</h3>
-                <div class="card-s1n p-4 space-y-6">
-                    <div class="flex items-center justify-between">
-                        <label class="text-xs font-bold uppercase tracking-wider">Language</label>
-                        <select id="setting-lang" class="bg-input border border-border text-xs font-bold uppercase rounded-lg py-1.5 px-3 focus:outline-none" onchange="updateGeneralSettings()">
-                            <option value="en">English</option>
-                            <option value="es" disabled>Spanish (WIP)</option>
-                            <option value="jp" disabled>Japanese (WIP)</option>
-                        </select>
-                    </div>
-
-                    <div class="flex items-center justify-between">
-                        <label class="text-xs font-bold uppercase tracking-wider">Time Format</label>
-                        <div class="flex bg-input rounded-lg p-1 border border-border">
-                            <button onclick="setTimeFormat('12h')" id="btn-12h" class="px-3 py-1 text-[10px] font-bold rounded-md transition-all">12H</button>
-                            <button onclick="setTimeFormat('24h')" id="btn-24h" class="px-3 py-1 text-[10px] font-bold rounded-md transition-all">24H</button>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between">
-                        <label class="text-xs font-bold uppercase tracking-wider">Visual Theme</label>
-                        <div class="flex bg-input rounded-lg p-1 border border-border">
-                            <button onclick="setTheme('light')" id="theme-btn-light" class="px-3 py-1 text-[10px] font-bold rounded-md transition-all">Light</button>
-                            <button onclick="setTheme('dark')" id="theme-btn-dark" class="px-3 py-1 text-[10px] font-bold rounded-md transition-all">Dark</button>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between">
-                        <label class="text-xs font-bold uppercase tracking-wider">System Alerts</label>
-                        <button id="btn-notif-toggle" onclick="toggleNotifications()" class="w-10 h-5 rounded-full bg-border relative transition-colors">
-                            <div id="knob-notif" class="w-3 h-3 bg-white rounded-full absolute top-1 left-1 transition-transform"></div>
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <section>
-                <h3 class="text-[10px] font-bold text-muted uppercase tracking-[0.2em] mb-3 ml-1">Focus Calibration</h3>
-                <div class="card-s1n p-4 space-y-4">
-                    <div class="grid grid-cols-1 gap-4">
-                        <div class="flex items-center justify-between border-b border-border pb-3">
-                            <label class="text-xs font-bold uppercase tracking-wider text-muted">Focus Session</label>
-                            <div class="flex items-center gap-2">
-                                <input type="number" id="setting-focus" class="input-s1n w-16 text-center py-1 text-sm font-mono" onchange="saveTimerSettings()">
-                                <span class="text-[10px] font-bold uppercase text-muted">Min</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between border-b border-border pb-3">
-                            <label class="text-xs font-bold uppercase tracking-wider text-muted">Short Break</label>
-                            <div class="flex items-center gap-2">
-                                <input type="number" id="setting-short" class="input-s1n w-16 text-center py-1 text-sm font-mono" onchange="saveTimerSettings()">
-                                <span class="text-[10px] font-bold uppercase text-muted">Min</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <label class="text-xs font-bold uppercase tracking-wider text-muted">Long Break</label>
-                            <div class="flex items-center gap-2">
-                                <input type="number" id="setting-long" class="input-s1n w-16 text-center py-1 text-sm font-mono" onchange="saveTimerSettings()">
-                                <span class="text-[10px] font-bold uppercase text-muted">Min</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section>
-                <h3 class="text-[10px] font-bold text-muted uppercase tracking-[0.2em] mb-3 ml-1">System Info</h3>
-                <div class="card-s1n overflow-hidden">
-                    <button onclick="alert('Standard S1N Terms apply.')" class="w-full flex items-center justify-between p-4 hover:bg-input transition-colors border-b border-border text-left">
-                        <span class="text-xs font-bold uppercase tracking-wider text-muted">Terms of Service</span>
-                        <i data-lucide="chevron-right" class="w-4 h-4 text-muted"></i>
-                    </button>
-                    <button onclick="alert('Data stored locally and on Firebase. No third-party tracking.')" class="w-full flex items-center justify-between p-4 hover:bg-input transition-colors border-b border-border text-left">
-                        <span class="text-xs font-bold uppercase tracking-wider text-muted">Privacy Policy</span>
-                        <i data-lucide="chevron-right" class="w-4 h-4 text-muted"></i>
-                    </button>
-                    <div class="p-4 bg-input flex justify-between items-center">
-                        <span class="text-xs font-bold uppercase tracking-wider text-muted">Version</span>
-                        <span class="text-[10px] font-mono font-bold text-main opacity-50">v2.4.0 (IND)</span>
-                    </div>
-                </div>
-            </section>
-
-            <div class="text-center pt-8">
-                 <p class="text-[9px] font-bold text-muted uppercase tracking-[0.3em] opacity-30">S1N Design System</p>
-            </div>
-        </div>
-    </div>
-
     <div id="main-app" class="hidden flex flex-col min-h-screen pb-24 max-w-lg mx-auto w-full relative"> 
         
         <header class="px-6 pt-6 pb-4 sticky top-0 z-40 bg-body/95 backdrop-blur-sm transition-all">
             <div class="flex justify-between items-start mb-1">
                 <div>
                     <h1 class="text-2xl font-extrabold tracking-tighter leading-tight">
-                        S1N<br>PRODUCTIVE.
+                        <span class="animate-title stagger-1 inline-block">S1N</span><br>
+                        <span class="animate-title stagger-2 inline-block">PRODUCTIVE.</span>
                     </h1>
                 </div>
                 <div class="flex gap-2">
                     <button onclick="window.openAccount()" class="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-card transition-colors">
                         <i data-lucide="user" class="w-4 h-4"></i>
                     </button>
-                    <button onclick="openFullSettings()" class="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-card transition-colors">
+                    <button onclick="openSettings()" class="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-card transition-colors">
                         <i data-lucide="settings" class="w-4 h-4"></i>
                     </button>
                 </div>
@@ -350,7 +202,9 @@
             </section>
 
             <section id="view-reports" class="view-section hidden animate-fade-in">
-                <h2 class="text-3xl font-bold tracking-tight mb-6">Analytics.</h2>
+                <h2 class="text-3xl font-bold tracking-tight mb-6">
+                    <span class="animate-title stagger-1 inline-block">Analytics.</span>
+                </h2>
                 <div class="flex border-b border-border mb-6">
                     <button onclick="switchReportTab('daily')" data-type="daily" class="report-tab flex-1 pb-3 text-xs font-bold uppercase tracking-wider border-b-2 border-main text-main">Daily</button>
                     <button onclick="switchReportTab('weekly')" data-type="weekly" class="report-tab flex-1 pb-3 text-xs font-bold uppercase tracking-wider border-b-2 border-transparent text-muted hover:text-main">Weekly</button>
@@ -360,7 +214,9 @@
             </section>
 
             <section id="view-contest" class="view-section hidden animate-fade-in">
-                <h2 class="text-3xl font-bold tracking-tight mb-2">Network.</h2>
+                <h2 class="text-3xl font-bold tracking-tight mb-2">
+                    <span class="animate-title stagger-1 inline-block">Network.</span>
+                </h2>
                 <p class="text-muted text-sm mb-6">Global Leaderboard & Friends</p>
                 <div class="flex gap-2 mb-6 overflow-x-auto scrollbar-hide">
                     <button id="tab-global" onclick="setSocialTab('global')" class="px-4 py-2 rounded-full border border-main bg-main text-body text-xs font-bold uppercase whitespace-nowrap">Global</button>
@@ -376,7 +232,9 @@
 
             <section id="view-shop" class="view-section hidden animate-fade-in">
                 <div class="flex justify-between items-end mb-6">
-                    <h2 class="text-3xl font-bold tracking-tight">Market.</h2>
+                    <h2 class="text-3xl font-bold tracking-tight">
+                        <span class="animate-title stagger-1 inline-block">Market.</span>
+                    </h2>
                     <div class="text-right">
                         <span id="shop-points-display" class="block text-2xl font-bold font-mono">0</span>
                         <span class="text-[10px] font-bold uppercase text-muted tracking-wider">Credits</span>
@@ -386,7 +244,9 @@
             </section>
 
             <section id="view-admin" class="view-section hidden animate-fade-in">
-                <h2 class="text-3xl font-bold tracking-tight mb-6 text-rose-500">Admin Control.</h2>
+                <h2 class="text-3xl font-bold tracking-tight mb-6 text-rose-500">
+                    <span class="animate-title stagger-1 inline-block">Admin Control.</span>
+                </h2>
                 <input type="text" id="admin-search" placeholder="Search Database..." class="input-s1n mb-6">
                 <div id="admin-user-list" class="space-y-3 pb-24"></div>
             </section>
@@ -416,17 +276,12 @@
     </div>
 
     <div id="account-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm">
-        <div class="card-s1n w-full max-w-sm p-6 relative animate-pop h-[70vh] overflow-y-auto scrollbar-hide">
+        <div class="card-s1n w-full max-w-sm p-6 relative animate-pop h-[80vh] overflow-y-auto scrollbar-hide">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold tracking-tight">Agent Profile</h3>
+                <h3 class="text-xl font-bold tracking-tight">Identity</h3>
                 <button onclick="closeAccount()"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             
-            <div class="p-3 bg-input rounded-xl mb-4 text-center">
-                 <p class="text-[10px] uppercase font-bold text-muted mb-1">Agent Identity</p>
-                 <p id="profile-name" class="font-bold text-lg">Guest</p>
-            </div>
-
             <div class="grid grid-cols-2 gap-3 mb-4">
                 <div class="p-3 border border-border rounded-xl text-center">
                     <div id="display-points" class="text-xl font-bold font-mono">0</div>
@@ -438,10 +293,58 @@
                 </div>
             </div>
 
-            <h4 class="text-[10px] font-bold uppercase text-muted tracking-widest mb-2 border-t border-border pt-4">Insignia</h4>
             <div id="profile-badges"></div>
             
             <div id="profile-achievements" class="mb-4"></div>
+
+            <div class="p-3 bg-input rounded-xl mb-4 text-center">
+                 <p class="text-[10px] uppercase font-bold text-muted mb-1">Agent Name</p>
+                 <p id="profile-name" class="font-bold text-lg">Guest</p>
+            </div>
+
+            <div class="space-y-2">
+                <button onclick="toggleChangePass()" class="w-full py-2.5 border border-border rounded-xl text-xs font-bold uppercase tracking-wide hover:bg-input transition-colors">Change Password</button>
+                
+                <div id="change-pass-form" class="hidden space-y-2 p-3 bg-input rounded-xl border border-border">
+                    <input type="password" id="cp-old" placeholder="Old Pass" class="input-s1n py-2 text-sm bg-card">
+                    <input type="password" id="cp-new" placeholder="New Pass" class="input-s1n py-2 text-sm bg-card">
+                    <button onclick="submitChangePass()" id="cp-btn" class="btn-s1n w-full py-2 text-xs">Update</button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="logout()" class="py-2.5 border border-border rounded-xl text-xs font-bold uppercase tracking-wide hover:bg-input transition-colors">Sign Out</button>
+                    <button onclick="deleteAccount()" class="py-2.5 border border-rose-200 text-rose-500 rounded-xl text-xs font-bold uppercase tracking-wide hover:bg-rose-50 dark:hover:bg-rose-900/10 transition-colors">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm">
+        <div class="card-s1n w-full max-w-sm p-6 relative animate-pop">
+            <h3 class="text-xl font-bold tracking-tight mb-6">System Config</h3>
+            <div class="space-y-6">
+                <div>
+                    <label class="text-[10px] font-bold text-muted uppercase tracking-wider block mb-3">Theme</label>
+                    <div class="flex border border-border rounded-xl overflow-hidden">
+                        <button onclick="setTheme('light')" id="theme-btn-light" class="flex-1 py-2 text-xs font-bold uppercase transition-colors">Light</button>
+                        <button onclick="setTheme('dark')" id="theme-btn-dark" class="flex-1 py-2 text-xs font-bold uppercase transition-colors">Dark</button>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-muted uppercase tracking-wider block mb-3">Timer (Minutes)</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="text-center"><input type="number" id="setting-focus" class="input-s1n text-center p-2 text-sm"><span class="text-[10px] text-muted mt-1 block">Focus</span></div>
+                        <div class="text-center"><input type="number" id="setting-short" class="input-s1n text-center p-2 text-sm"><span class="text-[10px] text-muted mt-1 block">Short</span></div>
+                        <div class="text-center"><input type="number" id="setting-long" class="input-s1n text-center p-2 text-sm"><span class="text-[10px] text-muted mt-1 block">Long</span></div>
+                    </div>
+                </div>
+                <button onclick="openNotificationHistory()" class="w-full flex justify-between items-center py-3 px-4 border border-border rounded-xl text-sm font-bold hover:bg-input">
+                    <span>Notification Logs</span>
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <button onclick="saveSettings()" class="btn-s1n w-full mt-8">Save Config</button>
+            <button onclick="closeSettings()" class="w-full mt-2 py-3 text-xs font-bold text-muted hover:text-main">Cancel</button>
         </div>
     </div>
     

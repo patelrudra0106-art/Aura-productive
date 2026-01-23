@@ -1,4 +1,4 @@
-/* profile.js - S1N Identity Management (Settings Integrated) */
+/* profile.js - S1N Industrial Theme Update (With Data Export) */
 
 // --- STATE ---
 let userProfile = JSON.parse(localStorage.getItem('auraProfile')) || {
@@ -18,6 +18,7 @@ let userProfile = JSON.parse(localStorage.getItem('auraProfile')) || {
     const savedMonth = userProfile.lastActiveMonth || "";
     let hasChanged = false;
 
+    // Monthly Reset (For League)
     if (savedMonth !== currentMonth) {
         userProfile.monthlyPoints = 0;
         userProfile.lastActiveMonth = currentMonth;
@@ -47,10 +48,14 @@ window.addPoints = function(amount, reason) {
     userProfile.monthlyPoints = (userProfile.monthlyPoints || 0) + amount;
 
     saveProfile();
+    
+    // --- TRIGGER ACHIEVEMENT CHECK ---
     if(window.checkAchievements) window.checkAchievements();
+    
     updateProfileUI();
     
     if(window.syncUserToDB) window.syncUserToDB(userProfile.points, userProfile.streak, userProfile.monthlyPoints, userProfile.lastActiveMonth);
+    
     if(amount > 0 && window.showNotification) window.showNotification(`CREDITS +${amount}`, reason, 'success');
 };
 
@@ -70,7 +75,10 @@ window.updateStreak = function() {
 
     userProfile.lastTaskDate = today;
     saveProfile();
+    
+    // --- TRIGGER ACHIEVEMENT CHECK ---
     if(window.checkAchievements) window.checkAchievements();
+
     updateProfileUI();
     
     if(window.syncUserToDB) window.syncUserToDB(userProfile.points, userProfile.streak, userProfile.monthlyPoints, userProfile.lastActiveMonth);
@@ -82,42 +90,65 @@ function saveProfile() {
 
 function updateProfileUI() {
     if(navStreak) navStreak.textContent = userProfile.streak;
-    if(pointsDisplay) pointsDisplay.textContent = userProfile.points.toLocaleString();
-    if(streakDisplay) streakDisplay.textContent = userProfile.streak;
-    if(profileNameDisplay) profileNameDisplay.textContent = userProfile.name || 'User';
+    
+    // ANIMATED STATS
+    if(pointsDisplay) {
+        pointsDisplay.innerHTML = `<span class="animate-title inline-block">${userProfile.points.toLocaleString()}</span>`;
+    }
+    
+    if(streakDisplay) {
+        streakDisplay.innerHTML = `<span class="animate-title stagger-1 inline-block">${userProfile.streak}</span>`;
+    }
+    
+    if(profileNameDisplay) {
+        const name = userProfile.name || 'User';
+        profileNameDisplay.innerHTML = `<span class="animate-title stagger-1 inline-block">${name}</span>`;
+    }
 
     renderProfileBadges();
     
+    // --- RENDER ACHIEVEMENTS ---
     if(window.renderAchievementsList) window.renderAchievementsList('profile-achievements');
 }
 
-// --- BADGE RENDERING ---
+// --- BADGE RENDERING (Fixed Grid Layout) ---
 function renderProfileBadges() {
     const user = JSON.parse(localStorage.getItem('auraUser'));
     const inventory = (user && user.inventory) ? user.inventory : [];
     
+    // Target the specific container ID we added in index.html
     const badgeContainer = document.getElementById('profile-badges');
     if (!badgeContainer) return;
 
     if (inventory.length === 0) {
         badgeContainer.innerHTML = '';
-        badgeContainer.className = 'hidden'; 
+        badgeContainer.className = 'hidden'; // Hide container if empty to save space
         return;
     }
 
+    // Force Grid Layout: 5 columns, centered items
     badgeContainer.className = "grid grid-cols-5 gap-2 mb-4 justify-items-center";
 
+    // Icon Lookup
     const badgeMap = {
-        'badge_crown': 'crown', 'badge_star': 'star', 'badge_fire': 'flame', 
-        'badge_zap': 'zap', 'theme_emerald': 'leaf'
+        'badge_crown': 'crown', 
+        'badge_star': 'star', 
+        'badge_fire': 'flame', 
+        'badge_zap': 'zap', 
+        'theme_emerald': 'leaf'
     };
 
     badgeContainer.innerHTML = '';
     
-    inventory.forEach(itemId => {
+    inventory.forEach((itemId, index) => {
         const icon = badgeMap[itemId] || 'award';
+        
         const badge = document.createElement('div');
-        badge.className = `w-10 h-10 flex items-center justify-center rounded-lg border border-border text-muted hover:text-main hover:border-main transition-colors cursor-help bg-card`;
+        // Fixed square size (w-10 h-10) to prevent full-width stacking
+        // Added animate-slide-in for staggered badge entry
+        badge.className = `w-10 h-10 flex items-center justify-center rounded-lg border border-border text-muted hover:text-main hover:border-main transition-colors cursor-help bg-card animate-slide-in`;
+        badge.style.animationDelay = `${index * 50}ms`;
+        
         badge.title = itemId;
         badge.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5"></i>`;
         badgeContainer.appendChild(badge);
@@ -126,10 +157,25 @@ function renderProfileBadges() {
     if(window.lucide) lucide.createIcons();
 }
 
-// --- MODAL CONTROLS (Simplfied) ---
+// --- MODAL CONTROLS ---
 window.openAccount = function() {
     const modal = document.getElementById('account-modal');
     if(modal) {
+        // --- DYNAMICALLY INJECT EXPORT BUTTON IF MISSING ---
+        // This ensures the button appears without editing index.html
+        const passBtn = document.querySelector('button[onclick="toggleChangePass()"]');
+        if (passBtn && passBtn.parentNode && !document.getElementById('btn-export-data')) {
+            const exportBtn = document.createElement('button');
+            exportBtn.id = 'btn-export-data';
+            exportBtn.className = "w-full py-2.5 mb-2 border border-border rounded-xl text-xs font-bold uppercase tracking-wide hover:bg-input transition-colors text-main";
+            exportBtn.innerHTML = '<span class="flex items-center justify-center gap-2"><i data-lucide="download" class="w-3 h-3"></i> Backup Data</span>';
+            exportBtn.onclick = window.exportUserData;
+            
+            // Insert before the Change Password button
+            passBtn.parentNode.insertBefore(exportBtn, passBtn);
+            if(window.lucide) lucide.createIcons();
+        }
+
         modal.classList.remove('hidden');
         updateProfileUI();
     }
@@ -137,10 +183,13 @@ window.openAccount = function() {
 
 window.closeAccount = function() {
     const modal = document.getElementById('account-modal');
+    const passForm = document.getElementById('change-pass-form');
+    // Hide password form when closing to reset state
+    if(passForm) passForm.classList.add('hidden');
     if(modal) modal.classList.add('hidden');
 };
 
-// --- DATA EXPORT (Used by Settings) ---
+// --- DATA EXPORT (OPTION C) ---
 window.exportUserData = function() {
     const user = JSON.parse(localStorage.getItem('auraUser'));
     if (!user) return alert("No identity found.");
@@ -165,19 +214,18 @@ window.exportUserData = function() {
     const downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute("href", dataStr);
     downloadAnchorNode.setAttribute("download", `S1N_BACKUP_${user.name}_${new Date().toISOString().slice(0,10)}.json`);
-    document.body.appendChild(downloadAnchorNode); 
+    document.body.appendChild(downloadAnchorNode); // required for firefox
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
 
     if(window.showNotification) window.showNotification("Backup Complete", "Data package downloaded.", "success");
 };
 
-// --- PASSWORD MANAGEMENT (Used by Settings) ---
+// --- PASSWORD RESET LOGIC ---
 window.toggleChangePass = function() {
     const form = document.getElementById('change-pass-form');
     if(form) {
         form.classList.toggle('hidden');
-        // Clear fields on toggle
         const old = document.getElementById('cp-old');
         const newP = document.getElementById('cp-new');
         if(old) old.value = '';
@@ -229,6 +277,7 @@ window.submitChangePass = async function() {
     }
 };
 
+// Init
 document.addEventListener('DOMContentLoaded', () => {
     updateProfileUI();
 });

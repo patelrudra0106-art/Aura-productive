@@ -93,8 +93,12 @@ function renderSlide() {
             </div>
 
             <div class="px-6 text-center">
-                <h2 class="text-2xl font-extrabold uppercase tracking-tight mb-2 leading-none text-main">${slide.title}</h2>
-                <p class="text-[10px] text-muted font-bold uppercase tracking-widest leading-relaxed max-w-xs mx-auto">${slide.desc}</p>
+                <h2 class="text-2xl font-extrabold uppercase tracking-tight mb-2 leading-none text-main">
+                    <span class="animate-title inline-block">${slide.title}</span>
+                </h2>
+                <p class="text-[10px] text-muted font-bold uppercase tracking-widest leading-relaxed max-w-xs mx-auto">
+                    <span class="animate-title stagger-1 inline-block">${slide.desc}</span>
+                </p>
             </div>
         </div>
     `;

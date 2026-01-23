@@ -158,11 +158,15 @@ window.viewFriendProfile = function(targetName) {
 
             <div class="grid grid-cols-2 gap-3 mb-4">
                 <div class="p-3 border border-border rounded-xl text-center">
-                    <div class="text-xl font-bold font-mono">${user.points || 0}</div>
+                    <div class="text-xl font-bold font-mono overflow-hidden">
+                        <span class="animate-title inline-block">${user.points || 0}</span>
+                    </div>
                     <div class="text-[10px] uppercase font-bold text-muted">Credits</div>
                 </div>
                 <div class="p-3 border border-border rounded-xl text-center">
-                    <div class="text-xl font-bold font-mono">${user.streak || 0}</div>
+                    <div class="text-xl font-bold font-mono overflow-hidden">
+                         <span class="animate-title inline-block">${user.streak || 0}</span>
+                    </div>
                     <div class="text-[10px] uppercase font-bold text-muted">Streak</div>
                 </div>
             </div>
@@ -221,16 +225,21 @@ function renderLeagueHeader() {
             }
         }
 
+        // ANIMATED HEADER CONTENT
         header.innerHTML = `
             <div class="flex items-center gap-3">
                 <i data-lucide="trophy" class="w-5 h-5 text-main"></i>
                 <div>
-                    <h3 class="font-bold text-sm">Monthly League</h3>
+                    <h3 class="font-bold text-sm">
+                        <span class="animate-title inline-block">Monthly League</span>
+                    </h3>
                     <p class="text-[10px] text-muted uppercase tracking-wider">Top 3 receive badges</p>
                 </div>
             </div>
             <div class="text-right">
-                <span class="block text-xl font-bold font-mono">${daysLeft}</span>
+                <span class="block text-xl font-bold font-mono overflow-hidden">
+                    <span class="animate-title stagger-1 inline-block">${daysLeft}</span>
+                </span>
                 <span class="text-[10px] uppercase font-bold text-muted">Days Left</span>
             </div>
         `;

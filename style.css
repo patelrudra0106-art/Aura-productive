@@ -111,6 +111,30 @@ body {
     border-color: var(--text-muted); 
 }
 
+/* --- TEXT ANIMATIONS (NEW) --- */
+@keyframes textReveal {
+    0% { 
+        transform: translateY(20px); 
+        opacity: 0; 
+        filter: blur(4px);
+    }
+    100% { 
+        transform: translateY(0); 
+        opacity: 1; 
+        filter: blur(0);
+    }
+}
+
+.animate-title {
+    animation: textReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    display: inline-block; /* Ensures transform works on inline text */
+}
+
+/* Stagger delays for sequential word appearance */
+.stagger-1 { animation-delay: 0.1s; opacity: 0; animation-fill-mode: forwards; }
+.stagger-2 { animation-delay: 0.2s; opacity: 0; animation-fill-mode: forwards; }
+.stagger-3 { animation-delay: 0.3s; opacity: 0; animation-fill-mode: forwards; }
+
 /* --- STANDARD ANIMATIONS --- */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
@@ -135,6 +159,18 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 .animate-slide-in-top { animation: slideInTop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+@keyframes rgbBorder {
+    0% { border-color: #FF0000; box-shadow: 0 0 10px rgba(255,0,0,0.2); }
+    20% { border-color: #FFFF00; box-shadow: 0 0 10px rgba(255,255,0,0.2); }
+    40% { border-color: #00FF00; box-shadow: 0 0 10px rgba(0,255,0,0.2); }
+    60% { border-color: #00FFFF; box-shadow: 0 0 10px rgba(0,255,255,0.2); }
+    80% { border-color: #0000FF; box-shadow: 0 0 10px rgba(0,0,255,0.2); }
+    100% { border-color: #FF00FF; box-shadow: 0 0 10px rgba(255,0,255,0.2); }
+}
+.animate-rgb-border {
+    animation: rgbBorder 4s linear infinite;
+}
 
 /* --- AUTH STYLES --- */
 #auth-overlay { background-color: var(--bg-body); }

@@ -61,7 +61,9 @@ window.loadShop = function() {
     if (!list) return;
     
     if (pointsDisplay) {
-        pointsDisplay.textContent = user ? (user.points || 0).toLocaleString() : '0';
+        // ANIMATED POINTS
+        const pts = user ? (user.points || 0).toLocaleString() : '0';
+        pointsDisplay.innerHTML = `<span class="animate-title stagger-1 inline-block">${pts}</span>`;
     }
 
     renderShopItems(list, user);

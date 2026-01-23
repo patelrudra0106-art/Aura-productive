@@ -1,6 +1,6 @@
-/* service-worker.js - S1N Offline Capability (Assets Update) */
+/* service-worker.js - S1N Offline Capability (Animation Update) */
 
-const CACHE_NAME = 's1n-productive-v3'; // Version bumped to force update
+const CACHE_NAME = 's1n-productive-v5'; // Version bumped for Animation System
 
 const ASSETS_TO_CACHE = [
   './',
@@ -19,7 +19,7 @@ const ASSETS_TO_CACHE = [
   './achievements.js',
   './onboarding.js',
   
-  // UPDATED PATHS: Now pointing to 'assets/' folder
+  // Assets
   './assets/122393.jpg', 
   './assets/122395.jpg', 
   './assets/122397.jpg', 
@@ -41,7 +41,7 @@ self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => {
-                console.log('[Service Worker] Caching assets from folder');
+                console.log('[Service Worker] Caching assets');
                 return cache.addAll(ASSETS_TO_CACHE);
             })
             .then(() => self.skipWaiting())

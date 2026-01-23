@@ -110,20 +110,26 @@ window.loadAdminPanel = function(filter = '') {
 
         list.innerHTML = '';
 
-        // --- DASHBOARD UI ---
+        // --- DASHBOARD UI (ANIMATED STATS) ---
         const dashboardHTML = `
             <div class="grid grid-cols-3 gap-2 mb-6 animate-fade-in">
                 <div class="card-s1n p-3 text-center">
                     <div class="text-[10px] uppercase font-bold text-muted">Users</div>
-                    <div class="text-xl font-bold font-mono text-main">${totalUsers}</div>
+                    <div class="text-xl font-bold font-mono text-main overflow-hidden">
+                        <span class="animate-title stagger-1 inline-block">${totalUsers}</span>
+                    </div>
                 </div>
                 <div class="card-s1n p-3 text-center">
                     <div class="text-[10px] uppercase font-bold text-muted">Active</div>
-                    <div class="text-xl font-bold font-mono text-main">${activeUsers}</div>
+                    <div class="text-xl font-bold font-mono text-main overflow-hidden">
+                        <span class="animate-title stagger-2 inline-block">${activeUsers}</span>
+                    </div>
                 </div>
                 <div class="card-s1n p-3 text-center">
                     <div class="text-[10px] uppercase font-bold text-muted">Credits</div>
-                    <div class="text-xl font-bold font-mono text-main">${totalPoints >= 1000 ? (totalPoints/1000).toFixed(1)+'k' : totalPoints}</div>
+                    <div class="text-xl font-bold font-mono text-main overflow-hidden">
+                        <span class="animate-title stagger-3 inline-block">${totalPoints >= 1000 ? (totalPoints/1000).toFixed(1)+'k' : totalPoints}</span>
+                    </div>
                 </div>
             </div>
 
@@ -408,12 +414,16 @@ window.adminDeleteUser = function(targetName) {
 window.toggleAuthMode = function() {
     isLoginMode = !isLoginMode;
     if (isLoginMode) {
-        authTitle.textContent = "Enter Workspace";
+        // ANIMATED TITLE SWITCH
+        authTitle.innerHTML = '<span class="animate-title inline-block">Enter Workspace</span>';
+        
         authSubmitBtn.textContent = "Initialize Session";
         toggleAuthText.innerHTML = "New agent? <span class='text-main font-bold cursor-pointer hover:underline' onclick='toggleAuthMode()'>Create ID</span>";
         confirmPassField.classList.add('hidden');
     } else {
-        authTitle.textContent = "New Registration";
+        // ANIMATED TITLE SWITCH
+        authTitle.innerHTML = '<span class="animate-title inline-block">New Registration</span>';
+        
         authSubmitBtn.textContent = "Create Identity";
         toggleAuthText.innerHTML = "Have ID? <span class='text-main font-bold cursor-pointer hover:underline' onclick='toggleAuthMode()'>Log In</span>";
         confirmPassField.classList.remove('hidden');
@@ -476,7 +486,7 @@ window.handleAuth = async function(e) {
             await userRef.set(newUser);
             loginUser(newUser);
 
-            // --- TRIGGER ONBOARDING ---
+            // --- TRIGGER ONBOARDING (NEW) ---
             setTimeout(() => {
                 if(window.startOnboarding) window.startOnboarding();
             }, 500); 

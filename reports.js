@@ -19,8 +19,7 @@ window.switchReportTab = function(type) {
     // Default: Transparent with border-bottom transparent
     const inactiveClass = "report-tab flex-1 pb-3 text-xs font-bold uppercase tracking-wider border-b-2 border-transparent text-muted hover:text-main transition-colors";
     
-    // Active: Solid bottom border (or solid background if preferred, but design used bottom border)
-    // Let's stick to the index.html design which used bottom borders for this section
+    // Active: Solid bottom border
     const activeClass = "report-tab flex-1 pb-3 text-xs font-bold uppercase tracking-wider border-b-2 border-main text-main transition-colors";
 
     reportTabs.forEach(btn => {
@@ -124,12 +123,10 @@ function renderReportUI(container, type, tasks, mins, sessions, onTime, late, no
     const onTimePct = Math.round(((onTime + noDeadline) / totalForChart) * 100);
     const latePct = Math.round((late / totalForChart) * 100);
     
-    // Monochrome Chart Colors (CSS Variables don't work in inline styles easily, so we use hex approximation or JS variable injection)
-    // We will use standard grays for the chart segments.
-    // Dark Mode compatibility: We check if html has 'dark' class
+    // Chart Colors
     const isDark = document.documentElement.classList.contains('dark');
     const colorMain = isDark ? '#FFFFFF' : '#111827';
-    const colorMuted = isDark ? '#27272a' : '#E5E7EB'; // Border color
+    const colorMuted = isDark ? '#27272a' : '#E5E7EB'; 
 
     const chartStyle = `background: conic-gradient(
         ${colorMain} 0% ${onTimePct}%, 
@@ -140,12 +137,16 @@ function renderReportUI(container, type, tasks, mins, sessions, onTime, late, no
         <div class="grid grid-cols-2 gap-4 mb-4 animate-fade-in">
             <div class="card-s1n p-4 flex flex-col items-center justify-center text-center">
                 <i data-lucide="check-circle-2" class="w-5 h-5 mb-2 text-main"></i>
-                <div class="text-3xl font-bold font-mono text-main">${tasks}</div>
+                <div class="text-3xl font-bold font-mono text-main overflow-hidden">
+                    <span class="animate-title stagger-1 inline-block">${tasks}</span>
+                </div>
                 <div class="text-[10px] font-bold uppercase text-muted tracking-wider mt-1">Protocols</div>
             </div>
             <div class="card-s1n p-4 flex flex-col items-center justify-center text-center">
                 <i data-lucide="clock" class="w-5 h-5 mb-2 text-main"></i>
-                <div class="text-3xl font-bold font-mono text-main">${mins}<span class="text-sm opacity-50">m</span></div>
+                <div class="text-3xl font-bold font-mono text-main overflow-hidden">
+                    <span class="animate-title stagger-2 inline-block">${mins}</span><span class="text-sm opacity-50">m</span>
+                </div>
                 <div class="text-[10px] font-bold uppercase text-muted tracking-wider mt-1">Focus Time</div>
             </div>
         </div>
@@ -158,7 +159,9 @@ function renderReportUI(container, type, tasks, mins, sessions, onTime, late, no
                         <p class="text-xs font-bold uppercase text-main">Sessions</p>
                     </div>
                 </div>
-                <span class="font-bold font-mono text-main">${sessions}</span>
+                <span class="font-bold font-mono text-main">
+                    <span class="animate-title stagger-3 inline-block">${sessions}</span>
+                </span>
             </div>
 
             <div class="flex justify-between items-center p-4 border border-border rounded-xl">
@@ -168,7 +171,9 @@ function renderReportUI(container, type, tasks, mins, sessions, onTime, late, no
                         <p class="text-xs font-bold uppercase text-main">Efficiency</p>
                     </div>
                 </div>
-                <span class="font-bold font-mono text-main">${efficiency}m / Task</span>
+                <span class="font-bold font-mono text-main">
+                    <span class="animate-title stagger-3 inline-block">${efficiency}</span>m / Task
+                </span>
             </div>
         </div>
 
@@ -179,8 +184,10 @@ function renderReportUI(container, type, tasks, mins, sessions, onTime, late, no
             
             <div class="flex items-center gap-8">
                 <div class="relative w-28 h-28 shrink-0 rounded-full flex items-center justify-center" style="${chartStyle}">
-                    <div class="w-20 h-20 bg-card rounded-full flex flex-col items-center justify-center border border-border">
-                        <span class="text-xl font-bold font-mono text-main">${onTimePct}%</span>
+                    <div class="w-20 h-20 bg-card rounded-full flex flex-col items-center justify-center border border-border overflow-hidden">
+                        <span class="text-xl font-bold font-mono text-main">
+                            <span class="animate-title stagger-2 inline-block">${onTimePct}%</span>
+                        </span>
                     </div>
                 </div>
 
