@@ -1,4 +1,4 @@
-/* tasks.js - S1N Task Management & Logic (Time Format Aware) */
+/* tasks.js - S1N Task Management & Logic (FIXED) */
 
 let currentFilter = 'all';
 
@@ -14,18 +14,22 @@ window.loadTasks = function() {
     // Render
     renderTasks();
     
-    // Logic to safely attach listeners
+    // --- LISTENER SETUP ---
     const input = document.getElementById('task-input');
     const addBtn = document.getElementById('add-btn');
     const form = document.getElementById('task-form');
 
+    // 1. Input Listener
     if (input && addBtn) {
+        // Ensure button state is correct immediately on load
         addBtn.disabled = input.value.trim() === '';
+
         input.oninput = (e) => {
             addBtn.disabled = e.target.value.trim() === '';
         };
     }
 
+    // 2. Form Submit
     if (form) {
         form.onsubmit = (e) => {
             e.preventDefault();
@@ -33,6 +37,7 @@ window.loadTasks = function() {
         };
     }
 
+    // Setup Filter Buttons
     setupFilterButtons();
 };
 
@@ -58,12 +63,16 @@ function addNewTask() {
     saveTasks();
     renderTasks();
 
+    // Reset Form
     input.value = '';
     dateInput.value = '';
     timeInput.value = '';
     document.getElementById('add-btn').disabled = true;
 
+    // Juice: Small vibration/sound
     if(window.showNotification) window.showNotification("PROTOCOL ADDED", "Task queued.", "info");
+    
+    // Check "Initiation" achievement immediately
     if(window.checkAchievements) window.checkAchievements();
 }
 
@@ -71,17 +80,27 @@ window.toggleTask = function(id) {
     const task = window.tasks.find(t => t.id === id);
     if (task) {
         task.completed = !task.completed;
+        
         if (task.completed) {
+            // --- TASK COMPLETED ---
             task.completedAt = Date.now();
+            
+            // Trigger Gamification (+ Points)
             if(window.addPoints) window.addPoints(10, "Task Complete");
             if(window.updateStreak) window.updateStreak();
             
+            // Audio Feedback
             const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3'); 
             audio.volume = 0.2;
             audio.play().catch(()=>{});
         } else {
+            // --- TASK UNCHECKED (FIXED) ---
             task.completedAt = null;
+
+            // Deduct Points to prevent farming loop
+            if(window.addPoints) window.addPoints(-10, "Task Undone");
         }
+        
         saveTasks();
         renderTasks();
     }
@@ -89,6 +108,15 @@ window.toggleTask = function(id) {
 
 window.deleteTask = function(id) {
     if(confirm("Delete this protocol?")) {
+        // Optional: If you want to prevent users from completing a task (+10) 
+        // and then deleting it to keep the points, uncomment the lines below:
+        
+        /* const task = window.tasks.find(t => t.id === id);
+        if (task && task.completed && window.addPoints) {
+            window.addPoints(-10, "Task Deleted");
+        }
+        */
+
         window.tasks = window.tasks.filter(t => t.id !== id);
         saveTasks();
         renderTasks();
@@ -109,6 +137,7 @@ function renderTasks() {
 
     list.innerHTML = '';
 
+    // Filter Logic
     let filtered = window.tasks;
     if (currentFilter === 'active') filtered = window.tasks.filter(t => !t.completed);
     if (currentFilter === 'completed') filtered = window.tasks.filter(t => t.completed);
@@ -128,6 +157,7 @@ function renderTasks() {
                 const today = new Date().toISOString().split('T')[0];
                 const isLate = !task.completed && task.date < today;
                 
+                // Format Date/Time
                 let displayDate = task.date;
                 if(task.date === today) displayDate = 'Today';
                 
@@ -165,29 +195,25 @@ function renderTasks() {
 function setupFilterButtons() {
     const buttons = document.querySelectorAll('.filter-btn');
     
+    // Styles
     const activeClass = "filter-btn active text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-main bg-main text-body transition-colors";
     const inactiveClass = "filter-btn text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-transparent text-muted hover:text-main transition-colors";
 
     buttons.forEach(btn => {
         btn.addEventListener('click', () => {
+            // Update State
             currentFilter = btn.dataset.filter;
-            buttons.forEach(b => b.className = inactiveClass); 
-            btn.className = activeClass; 
+            
+            // Update UI Colors
+            buttons.forEach(b => b.className = inactiveClass); // Reset all
+            btn.className = activeClass; // Set active
+
             renderTasks();
         });
     });
 }
 
-// --- TIME FORMAT HELPER (UPDATED) ---
 function formatTime(timeString) {
-    if (!timeString) return '';
-    
-    // Check Global Settings (24H mode)
-    if (window.appSettings && window.appSettings.timeFormat === '24h') {
-        return timeString; // Input type='time' returns HH:mm (24h) by default
-    }
-
-    // Default to 12H (AM/PM)
     const [hours, minutes] = timeString.split(':');
     const h = parseInt(hours);
     const ampm = h >= 12 ? 'PM' : 'AM';
@@ -195,6 +221,7 @@ function formatTime(timeString) {
     return `${h12}:${minutes} ${ampm}`;
 }
 
+// Auto-load on script run if DOM is ready
 if(document.readyState === 'complete') {
     window.loadTasks();
 } else {
