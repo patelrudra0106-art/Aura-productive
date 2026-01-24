@@ -1,4 +1,4 @@
-/* profile.js - S1N Industrial Theme Update (FIXED) */
+/* profile.js - S1N Industrial Theme Update (Standard) */
 
 // --- STATE ---
 // We initialize this for UI rendering, but logic functions will now reload fresh data
@@ -49,7 +49,7 @@ const streakDisplay = document.getElementById('display-streak');
 const navStreak = document.getElementById('streak-count');
 const profileNameDisplay = document.getElementById('profile-name');
 
-// --- LOGIC (FIXED) ---
+// --- LOGIC ---
 window.addPoints = function(amount, reason) {
     // 1. RELOAD DATA (Fixes "Free Item" glitch by getting fresh points from Shop updates)
     let user = JSON.parse(localStorage.getItem('auraUser'));

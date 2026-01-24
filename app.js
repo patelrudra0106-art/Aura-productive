@@ -39,7 +39,7 @@ window.setTheme = function(mode) {
     playClickSound();
 };
 
-// --- SETTINGS LOGIC (NEW) ---
+// --- SETTINGS LOGIC ---
 
 window.openFullSettings = function() {
     const overlay = document.getElementById('settings-overlay');
@@ -84,6 +84,11 @@ window.setTimeFormat = function(fmt) {
     syncSettingsUI();
     // Reload tasks to reflect new time format
     if(window.loadTasks) window.loadTasks(); 
+    // Reload Chat if open to fix timestamps immediately
+    if(window.currentChatFriend && window.loadChatHistory) {
+         const user = JSON.parse(localStorage.getItem('auraUser'));
+         window.loadChatHistory(user.name, window.currentChatFriend);
+    }
 };
 
 // Toggle Notifications
@@ -91,6 +96,10 @@ window.toggleNotifications = function() {
     window.appSettings.notifications = !window.appSettings.notifications;
     saveAppSettings();
     syncSettingsUI();
+    
+    if(window.showNotification && window.appSettings.notifications) {
+        window.showNotification("System Active", "Notifications enabled.", "success");
+    }
 };
 
 // Update Language

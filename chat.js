@@ -1,4 +1,4 @@
-/* chat.js - S1N Real-time Messaging (Time Format Aware) */
+/* chat.js - S1N Real-time Messaging (Inbox Refresh Update) */
 
 let currentChatFriend = null;
 let chatListener = null;
@@ -20,14 +20,32 @@ window.initChatNotifications = function() {
             const msg = snapshot.val();
             if (!msg) return;
 
+            // Check if message is new (within last 5 seconds)
             const isNew = (Date.now() - msg.timestamp) < 5000; 
             
+            // Trigger Notification ONLY if:
+            // 1. Message is new
+            // 2. Sender is not me
+            // 3. I am not currently looking at this chat
             if (isNew && msg.sender !== user.name && currentChatFriend !== friendName) {
+                
+                // If we are currently looking at the "Chats" list, refresh it to show new message
+                if (window.socialViewMode === 'chats' && window.renderChatInbox) {
+                    window.renderChatInbox();
+                }
+
+                // POPUP NOTIFICATION
                 if (window.showNotification) {
                     window.showNotification(`Message from ${friendName}`, msg.text, 'info');
                 }
+                
+                // Sound
+                const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2345/2345-preview.mp3'); 
+                audio.volume = 0.2;
+                audio.play().catch(()=>{});
             }
         });
+        
         notificationListeners.push(() => ref.off('child_added', listener));
     });
 };
@@ -42,6 +60,7 @@ window.openChat = function(friendName) {
     const user = JSON.parse(localStorage.getItem('auraUser'));
     if (!user) return alert("Login required.");
 
+    // Close Friend Modal if open
     const friendModal = document.getElementById('friend-modal');
     if (friendModal) friendModal.classList.add('hidden');
 
@@ -54,6 +73,8 @@ window.openChat = function(friendName) {
     
     if (modal) modal.classList.remove('hidden');
     if (title) title.textContent = friendName;
+    
+    // Loading State
     if (messagesBox) messagesBox.innerHTML = '<div class="text-center py-4 opacity-50"><i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto"></i></div>';
     
     if (input) setTimeout(() => input.focus(), 100);
@@ -66,6 +87,7 @@ window.closeChat = function() {
     const modal = document.getElementById('chat-modal');
     if (modal) modal.classList.add('hidden');
     
+    // Detach listener for the specific chat window
     if (chatListener && currentChatFriend) {
         const user = JSON.parse(localStorage.getItem('auraUser'));
         if (user) {
@@ -74,12 +96,19 @@ window.closeChat = function() {
         }
     }
     currentChatFriend = null;
+
+    // --- NEW: Refresh Inbox List on Close ---
+    // This ensures your sent message shows up as the "Latest" immediately
+    if (window.socialViewMode === 'chats' && window.renderChatInbox) {
+        window.renderChatInbox();
+    }
 };
 
 function loadChatHistory(myName, friendName) {
     const chatId = getChatId(myName, friendName);
     const messagesBox = document.getElementById('chat-messages');
     
+    // Load last 50 messages
     const dbRef = firebase.database().ref(`chats/${chatId}/messages`).limitToLast(50);
 
     chatListener = dbRef.on('value', (snapshot) => {
@@ -102,11 +131,10 @@ function loadChatHistory(myName, friendName) {
                 ? 'bg-main text-body rounded-tr-sm' 
                 : 'bg-input text-main border border-border rounded-tl-sm';
 
-            // FORMAT TIME (New Logic)
+            // FORMAT TIME
             const date = new Date(msg.timestamp);
             let timeStr;
             
-            // Check Global Settings
             if (window.appSettings && window.appSettings.timeFormat === '24h') {
                 timeStr = date.toLocaleTimeString([], {hour12: false, hour: '2-digit', minute:'2-digit'});
             } else {
@@ -124,6 +152,7 @@ function loadChatHistory(myName, friendName) {
             messagesBox.appendChild(div);
         });
 
+        // Auto-scroll to bottom
         messagesBox.scrollTop = messagesBox.scrollHeight;
     });
 }
@@ -147,6 +176,7 @@ window.sendChatMessage = function() {
 
     input.value = '';
     
+    // Sound Effect
     const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2345/2345-preview.mp3'); 
     audio.volume = 0.1;
     audio.play().catch(()=>{});

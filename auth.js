@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
         listenToStats(); 
         listenForBroadcasts(); 
         
-        // Init Chat Notifications
+        // Init Chat Notifications (CRITICAL for Chat Popup)
         setTimeout(() => {
             if(window.initChatNotifications) window.initChatNotifications();
         }, 1000);

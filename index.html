@@ -29,7 +29,6 @@
                         'slide-in-top': 'slideInTop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                         'rgb-border': 'rgbBorder 3s linear infinite',
                         'shake': 'shake 0.4s cubic-bezier(.36,.07,.19,.97) both',
-                        // Note: textReveal is defined in style.css
                     }
                 }
             }
@@ -376,15 +375,25 @@
                     <span class="animate-title stagger-1 inline-block">Network.</span>
                 </h2>
                 <p class="text-muted text-sm mb-6">Global Leaderboard & Friends</p>
+                
+                <div id="requests-container" class="hidden mb-6">
+                        <h3 class="text-xs font-bold uppercase text-main mb-3 pl-1 flex items-center gap-2">
+                        <i data-lucide="user-plus" class="w-3.5 h-3.5"></i> Pending Requests
+                    </h3>
+                    <div id="requests-list" class="space-y-2"></div>
+                </div>
+
                 <div class="flex gap-2 mb-6 overflow-x-auto scrollbar-hide">
                     <button id="tab-global" onclick="setSocialTab('global')" class="px-4 py-2 rounded-full border border-main bg-main text-body text-xs font-bold uppercase whitespace-nowrap">Global</button>
                     <button id="tab-league" onclick="setSocialTab('league')" class="px-4 py-2 rounded-full border border-border text-muted hover:text-main text-xs font-bold uppercase whitespace-nowrap">League</button>
                     <button id="tab-friends" onclick="setSocialTab('friends')" class="px-4 py-2 rounded-full border border-border text-muted hover:text-main text-xs font-bold uppercase whitespace-nowrap">Friends</button>
                 </div>
-                <div class="relative mb-6">
+                
+                <div id="search-container" class="relative mb-6">
                     <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted"></i>
                     <input type="text" id="user-search" placeholder="Search Agent..." class="input-s1n pl-10">
                 </div>
+                
                 <div id="contest-list" class="space-y-2 pb-24"></div>
             </section>
 
@@ -466,33 +475,36 @@
         <div id="friend-modal-content" class="card-s1n w-full max-w-sm p-6 relative animate-pop"></div>
     </div>
 
-    <div id="chat-modal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm">
-        <div class="card-s1n w-full max-w-sm h-[500px] flex flex-col relative animate-pop shadow-2xl">
-            <div class="p-4 border-b border-border flex justify-between items-center bg-card rounded-t-2xl">
+    <div id="chat-modal" class="hidden fixed inset-0 z-[200] bg-body flex flex-col animate-slide-in-top">
+        <div class="p-4 border-b border-border flex justify-between items-center bg-card/95 backdrop-blur-md sticky top-0 z-10">
+            <div class="flex items-center gap-3">
+                <button onclick="closeChat()" class="text-muted hover:text-main">
+                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                </button>
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded-full bg-input border border-border flex items-center justify-center">
-                        <i data-lucide="message-square" class="w-4 h-4 text-main"></i>
+                        <i data-lucide="user" class="w-4 h-4 text-main"></i>
                     </div>
                     <div>
                         <h3 id="chat-title" class="font-bold text-main leading-none">User</h3>
-                        <p class="text-[10px] text-muted uppercase tracking-wider mt-1">Encrypted Connection</p>
+                        <p class="text-[10px] text-muted uppercase tracking-wider mt-0.5">Online</p>
                     </div>
                 </div>
-                <button onclick="closeChat()" class="text-muted hover:text-rose-500 transition-colors">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
+            </div>
+            <button class="text-muted hover:text-rose-500 transition-colors">
+                <i data-lucide="more-vertical" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-body scrollbar-hide pb-24">
             </div>
 
-            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-2 bg-body/50 scrollbar-hide">
-                </div>
-
-            <div class="p-3 border-t border-border bg-card rounded-b-2xl">
-                <div class="flex gap-2">
-                    <input type="text" id="chat-input" placeholder="Transmit message..." class="input-s1n py-3 text-sm" autocomplete="off">
-                    <button onclick="sendChatMessage()" class="btn-s1n px-4 flex items-center justify-center">
-                        <i data-lucide="send" class="w-4 h-4"></i>
-                    </button>
-                </div>
+        <div class="p-3 border-t border-border bg-card/95 backdrop-blur-md pb-6 sticky bottom-0 z-10">
+            <div class="flex gap-2 items-end bg-input rounded-2xl p-2 border border-border">
+                <input type="text" id="chat-input" placeholder="Transmit message..." class="bg-transparent flex-1 p-2 text-sm outline-none text-main" autocomplete="off">
+                <button onclick="sendChatMessage()" class="p-2 bg-main text-body rounded-xl flex items-center justify-center hover:opacity-90 transition-opacity">
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                </button>
             </div>
         </div>
     </div>

@@ -1,4 +1,4 @@
-/* tasks.js - S1N Task Management & Logic (FIXED: 5 Task Limit) */
+/* tasks.js - S1N Task Management & Logic (Notifications Enabled) */
 
 let currentFilter = 'all';
 
@@ -50,11 +50,10 @@ function addNewTask() {
     
     if (!text) return;
 
-    // --- DAILY LIMIT CHECK (NEW) ---
+    // --- DAILY LIMIT CHECK ---
     const todayStr = new Date().toLocaleDateString();
     
     // Count tasks created today
-    // We check the 'createdAt' timestamp against today's date
     const tasksToday = window.tasks.filter(t => {
         const taskDate = new Date(t.createdAt).toLocaleDateString();
         return taskDate === todayStr;
@@ -66,12 +65,8 @@ function addNewTask() {
         } else {
             alert("Daily Limit Reached: Max 5 protocols per day.");
         }
-        
-        // Clear input to indicate rejection or leave it (user choice). 
-        // Usually better to leave it so they can copy it elsewhere if needed.
         return; 
     }
-    // --- END LIMIT CHECK ---
 
     const newTask = {
         id: Date.now(),
@@ -92,7 +87,7 @@ function addNewTask() {
     timeInput.value = '';
     document.getElementById('add-btn').disabled = true;
 
-    // Juice: Small vibration/sound
+    // Notification Feedback
     if(window.showNotification) window.showNotification("PROTOCOL ADDED", `Task queued (${tasksToday + 1}/5).`, "info");
     
     // Check "Initiation" achievement immediately
